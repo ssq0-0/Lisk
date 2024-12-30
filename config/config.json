@@ -1,0 +1,29 @@
+{
+    "oku_addresses":{
+        "swap_router":"0x447B8E40B0CdA8e55F405C86bC635D02d0540aB8",
+        "permit":"0xB952578f3520EE8Ea45b7914994dcf4702cEe578",
+        "factory":"0x0d922Fb1Bc191F64970ac40376643808b4B74Df9",
+        "quoter":"0x738fD6d10bCc05c230388B4027CAd37f82fe2AF2"
+    },
+    "ionic_addresses":{
+        "0x4200000000000000000000000000000000000006":"0x1c3e2b1a167d8b6D85505E82f46495eeb34951F8",
+        "0x05D032ac25d322df992303dCa074EE7392C117b9":"0x0D72f18BC4b4A2F0370Af6D799045595d806636F",
+        "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24":"0x5d4FE9b1Dc67d20ac79E5e8386D46517aA6b657c",
+        "0xf242275d3a6527d877f2c927a82d9b057609cc71":"0x7682C12F6D1af845479649c77A9E7729F0180D78",
+        "etnerMarket":"0xF448A36feFb223B8E46e36FF12091baBa97bdF60"
+    },
+    "abis":{
+        "oku":"./config/abi/oku.json",
+        "ionic":"./config/abi/ionic.json"
+    },
+    "rpc":{
+        "lisk":      "https://lisk.drpc.org",
+        "base":      "https://mainnet.base.org",
+        "arbitrum":  "https://arbitrum.drpc.org",
+        "optimism":  "https://rpc.ankr.com/optimism",
+        "linea":     "https://linea.drpc.org"
+    },
+    "enpoints":{
+        "relay":"https://api.relay.link/quote"
+    }
+}
