@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"golang.org/x/sync/errgroup"
 )
 
 type Client struct {
@@ -25,37 +26,46 @@ type Client struct {
 }
 
 func EthClientFactory(rpcs map[string]string) (map[string]*Client, error) {
+	if len(rpcs) == 0 {
+		return nil, errors.New("RPC URLs map is empty")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	g, ctx := errgroup.WithContext(ctx)
+
 	var (
 		result = make(map[string]*Client)
-		errCh  = make(chan error)
-		wg     sync.WaitGroup
 		mu     sync.Mutex
 	)
 
 	for name, rpc := range rpcs {
-		wg.Add(1)
+		name := name
+		rpc := rpc
 
-		go func(name, rpc string) {
-			defer wg.Done()
+		g.Go(func() error {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
 
-			client, err := ethclient.Dial(rpc)
+			client, err := ethclient.DialContext(ctx, rpc)
 			if err != nil {
-				errCh <- err
-				return
+				return err
 			}
 
 			mu.Lock()
 			result[name] = &Client{Client: client}
 			mu.Unlock()
-		}(name, rpc)
+
+			return nil
+		})
 	}
 
-	wg.Wait()
-	close(errCh)
-
-	if len(errCh) > 0 {
-		return nil, <-errCh
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
+
 	return result, nil
 }
 
@@ -109,7 +119,7 @@ func (c *Client) GetGasValues(msg ethereum.CallMsg) (uint64, *big.Int, *big.Int,
 		return 0, nil, nil, err
 	}
 
-	maxPriorityFeePerGas := big.NewInt(1e7)
+	maxPriorityFeePerGas := big.NewInt(1e8)
 	maxFeePerGas := new(big.Int).Add(header.BaseFee, maxPriorityFeePerGas)
 
 	gasLimit, err := c.Client.EstimateGas(context.Background(), msg)

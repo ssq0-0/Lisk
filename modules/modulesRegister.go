@@ -1,15 +1,20 @@
 package modules
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"lisk/config"
 	"lisk/ethClient"
 	"lisk/globals"
 	"lisk/modules/dex"
 	"lisk/modules/ionic"
 	"lisk/modules/relay"
+	"log"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"golang.org/x/sync/errgroup"
 )
 
 type ModuleFactory func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error)
@@ -29,40 +34,49 @@ func ModulesInit(cfg *config.Config, abis map[string]*abi.ABI, clients map[strin
 				globals.OptimismBridge: clients["optimism"],
 				globals.BaseBridge:     clients["base"],
 			}
+
+			log.Printf("relay clients: %+v", relayClients)
 			return relay.NewRelay(relayClients, cfg.Endpoints["relay"])
 		},
 	}
+	if len(modules) == 0 {
+		return nil, errors.New("no modules to initialize")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	g, ctx := errgroup.WithContext(ctx)
 
 	var (
 		result = make(map[string]ModulesFasad)
-		errCh  = make(chan error, len(modules))
 		mu     sync.Mutex
-		wg     sync.WaitGroup
 	)
 
 	for name, factory := range modules {
-		wg.Add(1)
+		name := name
+		factory := factory
 
-		go func(name string, factory ModuleFactory) {
-			defer wg.Done()
+		g.Go(func() error {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
 
 			module, err := factory(cfg, clients)
 			if err != nil {
-				errCh <- err
-				return
+				return fmt.Errorf("failed to initialize module %s: %w", name, err)
 			}
 
 			mu.Lock()
 			result[name] = module
 			mu.Unlock()
-		}(name, factory)
+
+			return nil
+		})
 	}
 
-	wg.Wait()
-	close(errCh)
-
-	if len(errCh) > 0 {
-		return nil, <-errCh
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	return result, nil

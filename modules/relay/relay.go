@@ -24,6 +24,10 @@ func NewRelay(clients map[globals.ActionType]*ethClient.Client, endpoint string)
 }
 
 func (r *Relay) Action(tokenIn, tokenOut common.Address, amountIn *big.Int, acc *account.Account, ta globals.ActionType) error {
+	if ta == "" {
+		return fmt.Errorf("A null client ethereum value was transmitted. Check RPC: %v", ta)
+	}
+
 	client, err := httpClient.NewHttpClient(acc.Proxy)
 	if err != nil {
 		return err

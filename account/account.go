@@ -1,14 +1,18 @@
 package account
 
 import (
+	"context"
 	"crypto/ecdsa"
+	"errors"
 	"lisk/models"
 	"lisk/utils"
-	"math/rand"
 	"sync"
+
+	"math/rand"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"golang.org/x/sync/errgroup"
 )
 
 type Account struct {
@@ -23,31 +27,40 @@ type Account struct {
 }
 
 func AccsFactory(privateKeys []string) ([]*Account, error) {
+	if len(privateKeys) == 0 {
+		return nil, errors.New("privateKeys list is empty")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	g, ctx := errgroup.WithContext(ctx)
+
 	var (
-		accs  []*Account
-		errCh = make(chan error, len(privateKeys)) // Буферизованный канал
-		mu    sync.Mutex
-		wg    sync.WaitGroup
+		accs []*Account
+		mu   sync.Mutex
 	)
 
-	rand.Seed(time.Now().UnixNano()) // Инициализация генератора случайных чисел
+	accs = make([]*Account, 0, len(privateKeys))
 
 	for _, pk := range privateKeys {
-		wg.Add(1)
+		pk := pk
 
-		go func(pk string) {
-			defer wg.Done()
+		g.Go(func() error {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+
+			randSource := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 			privateKey, err := utils.ParsePrivateKey(pk)
 			if err != nil {
-				errCh <- err
-				return
+				return err
 			}
 
 			publicAddr, err := utils.DeriveAddress(privateKey)
 			if err != nil {
-				errCh <- err
-				return
+				return err
 			}
 
 			account := &Account{
@@ -55,29 +68,21 @@ func AccsFactory(privateKeys []string) ([]*Account, error) {
 				PrivateKey:          privateKey,
 				LastSwaps:           []models.SwapPair{},
 				LiquidityState:      &models.LiquidityState{},
-				ActionsCount:        3 + rand.Intn(25),
-				ActionsTime:         10 + rand.Intn(25),
-				BalancePercentUsage: 30 + rand.Intn(40),
+				ActionsCount:        3 + randSource.Intn(25),
+				ActionsTime:         10 + randSource.Intn(25),
+				BalancePercentUsage: 30 + randSource.Intn(40),
 			}
 
 			mu.Lock()
 			accs = append(accs, account)
 			mu.Unlock()
-		}(pk)
+
+			return nil
+		})
 	}
 
-	wg.Wait()
-	close(errCh)
-
-	// Проверка наличия ошибок
-	var firstErr error
-	for err := range errCh {
-		if firstErr == nil {
-			firstErr = err
-		}
-	}
-	if firstErr != nil {
-		return nil, firstErr
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	return accs, nil

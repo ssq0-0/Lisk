@@ -64,6 +64,7 @@ func checkAndBridgeToLisk(acc *account.Account, mod map[string]modules.ModulesFa
 		return fmt.Errorf("failed get max balance in all chains: %v", err)
 	}
 
+	logger.GlobalLogger.Infof("Bridge to LISK. From: %s.", chain)
 	if err := bridgeToLisk(acc, balance, chain, clients[chain], mod); err != nil {
 		return err
 	}
@@ -176,6 +177,10 @@ func getMaxBalance(acc *account.Account, clients map[string]*ethClient.Client) (
 	)
 
 	for chain, client := range clients {
+		if chain == "lisk" {
+			continue
+		}
+
 		balance, err := client.BalanceCheck(acc.Address, globals.WETH)
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to get balance in chain %s: %v", chain, err)
