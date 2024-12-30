@@ -49,6 +49,9 @@ func ReadAbis(modulePaths map[string]string) (map[string]*abi.ABI, error) {
 		abis[module] = &parsedAbi
 	}
 
+	if len(abis) == 0 {
+		return nil, fmt.Errorf("0 abis create. Check modules path.")
+	}
 	return abis, nil
 }
 

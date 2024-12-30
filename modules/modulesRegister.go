@@ -10,7 +10,6 @@ import (
 	"lisk/modules/dex"
 	"lisk/modules/ionic"
 	"lisk/modules/relay"
-	"log"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -35,7 +34,6 @@ func ModulesInit(cfg *config.Config, abis map[string]*abi.ABI, clients map[strin
 				globals.BaseBridge:     clients["base"],
 			}
 
-			log.Printf("relay clients: %+v", relayClients)
 			return relay.NewRelay(relayClients, cfg.Endpoints["relay"])
 		},
 	}
