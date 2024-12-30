@@ -25,18 +25,19 @@ type Account struct {
 func AccsFactory(privateKeys []string) ([]*Account, error) {
 	var (
 		accs  []*Account
-		errCh = make(chan error)
+		errCh = make(chan error, len(privateKeys)) // Буферизованный канал
 		mu    sync.Mutex
 		wg    sync.WaitGroup
 	)
 
-	rand.NewSource(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) // Инициализация генератора случайных чисел
 
 	for _, pk := range privateKeys {
 		wg.Add(1)
 
 		go func(pk string) {
 			defer wg.Done()
+
 			privateKey, err := utils.ParsePrivateKey(pk)
 			if err != nil {
 				errCh <- err
@@ -49,7 +50,7 @@ func AccsFactory(privateKeys []string) ([]*Account, error) {
 				return
 			}
 
-			account := Account{
+			account := &Account{
 				Address:             publicAddr,
 				PrivateKey:          privateKey,
 				LastSwaps:           []models.SwapPair{},
@@ -60,7 +61,7 @@ func AccsFactory(privateKeys []string) ([]*Account, error) {
 			}
 
 			mu.Lock()
-			accs = append(accs, &account)
+			accs = append(accs, account)
 			mu.Unlock()
 		}(pk)
 	}
@@ -68,8 +69,15 @@ func AccsFactory(privateKeys []string) ([]*Account, error) {
 	wg.Wait()
 	close(errCh)
 
-	if len(errCh) > 0 {
-		return nil, <-errCh
+	// Проверка наличия ошибок
+	var firstErr error
+	for err := range errCh {
+		if firstErr == nil {
+			firstErr = err
+		}
+	}
+	if firstErr != nil {
+		return nil, firstErr
 	}
 
 	return accs, nil
