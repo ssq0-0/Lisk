@@ -191,6 +191,10 @@ func getMaxBalance(acc *account.Account, clients map[string]*ethClient.Client) (
 }
 
 func generateNextAction(acc *account.Account, client *ethClient.Client) (ActionProcess, error) {
+	if len(acc.LastSwaps) == 0 && acc.LiquidityState.ActionCount == 0 {
+		return generateSwap(acc, client)
+	}
+
 	if rand.Intn(2) == 0 {
 		action, err := generateSwap(acc, client)
 		if err != nil {
