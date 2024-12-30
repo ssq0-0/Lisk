@@ -80,13 +80,11 @@ func (r *Relay) prepareData(quoteData *models.RelayResponse) (common.Address, *b
 		return common.Address{}, nil, nil, fmt.Errorf("failed to convert value to big.Int: %s", value)
 	}
 
-	// Преобразование Data в bytes
 	dataBytes, err := hex.DecodeString(strings.TrimPrefix(data, "0x"))
 	if err != nil {
 		return common.Address{}, nil, nil, fmt.Errorf("failed to decode data: %w", err)
 	}
 
-	// Преобразование To в common.Address
 	toAddress := common.HexToAddress(to)
 
 	return toAddress, valueBigInt, dataBytes, nil
