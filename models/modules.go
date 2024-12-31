@@ -51,3 +51,23 @@ type RelayResponse struct {
 		} `json:"items"`
 	} `json:"steps"`
 }
+
+type GraphQLRequest struct {
+	Query     string                 `json:"query"`
+	Variables map[string]interface{} `json:"variables"`
+}
+
+type GraphQLResponse struct {
+	Data struct {
+		Userdrop struct {
+			User struct {
+				Rank     int    `json:"rank"`
+				Points   int    `json:"points"`
+				UpdateAt string `json:"updatedAt"`
+			} `json:"user"`
+		} `json:"userdrop"`
+	} `json:"data"`
+	Errors []struct {
+		Message string `json:"message"`
+	} `json:"errors"`
+}

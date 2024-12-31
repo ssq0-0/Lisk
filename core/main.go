@@ -54,7 +54,7 @@ func main() {
 		logger.GlobalLogger.Infof("Finishing the programme.")
 		return
 	}
-	logger.GlobalLogger.Infof("The '%s' module was chosen", selectModule)
+	logger.GlobalLogger.Infof("The %s module was chosen", selectModule)
 
 	mods, err := modules.ModulesInit(cfg, selectModule, abis, clients)
 	if err != nil {
@@ -84,6 +84,7 @@ func userChoice() string {
 		"2. Ionic",
 		"3. Relay",
 		"4. All",
+		"5. Checker",
 		"0. Exit",
 	}
 

@@ -7,6 +7,7 @@ import (
 	"lisk/config"
 	"lisk/ethClient"
 	"lisk/globals"
+	"lisk/modules/checkers"
 	"lisk/modules/dex"
 	"lisk/modules/ionic"
 	"lisk/modules/relay"
@@ -42,6 +43,9 @@ func ModulesInit(cfg *config.Config, selectModules string, abis map[string]*abi.
 			}
 
 			return relay.NewRelay(relayClients, cfg.Endpoints["relay"])
+		},
+		"Checker": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
+			return checkers.NewChecker(cfg.Endpoints["top"])
 		},
 	}
 

@@ -15,6 +15,7 @@ const (
 	OptimismBridge ActionType = "optimism"
 	LineaBridge    ActionType = "linea"
 	BaseBridge     ActionType = "base"
+	Checker        ActionType = "checker"
 )
 
 var (

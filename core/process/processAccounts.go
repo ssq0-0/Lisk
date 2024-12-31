@@ -27,9 +27,10 @@ type ActionProcess struct {
 }
 
 var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
-	"Oku":   generateSwap,
-	"Ionic": generateLiquidity,
-	"Relay": generateBridgeToLisk,
+	"Oku":     generateSwap,
+	"Ionic":   generateLiquidity,
+	"Relay":   generateBridgeToLisk,
+	"Checker": generateChecker,
 }
 
 func ProcessAccounts(accs []*account.Account, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
@@ -102,7 +103,6 @@ func performActions(acc *account.Account, mod map[string]modules.ModulesFasad, c
 	}
 
 	times := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)
-
 	totalActions := acc.ActionsCount
 
 	for i := 0; i < totalActions; i++ {
@@ -127,9 +127,10 @@ func performActions(acc *account.Account, mod map[string]modules.ModulesFasad, c
 		}
 
 		if err := moduleFasad.Action(action.TokenFrom, action.TokenTo, action.Amount, acc, action.TypeAction); err != nil {
-			logger.GlobalLogger.Warnf("Failed to perform action: %v. Adding a new attempt.", err)
+			logger.GlobalLogger.Warnf("Failed to perform action: %v. Adding a new attempt and Sleep 15 seconds.", err)
 			totalActions++
 			times = append(times, generateTimeWindow(acc.ActionsTime, acc.ActionsCount)[0])
+			time.Sleep(15 * time.Second)
 			continue
 		}
 
@@ -237,6 +238,10 @@ func generateNextAction(acc *account.Account, availableModules []string, clients
 	}
 
 	return generator(acc, clients)
+}
+
+func generateChecker(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	return ActionProcess{TypeAction: globals.Checker, Module: "Checker"}, nil
 }
 
 func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
