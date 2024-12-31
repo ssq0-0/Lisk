@@ -29,7 +29,7 @@ type Account struct {
 	Proxy               string
 }
 
-func AccsFactory(privateKeys []string, cfg *config.Config) ([]*Account, error) {
+func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, error) {
 	if len(privateKeys) == 0 {
 		return nil, errors.New("privateKeys list is empty")
 	}
@@ -46,7 +46,7 @@ func AccsFactory(privateKeys []string, cfg *config.Config) ([]*Account, error) {
 
 	accs = make([]*Account, 0, len(privateKeys))
 
-	for _, pk := range privateKeys {
+	for i, pk := range privateKeys {
 		pk := pk
 
 		g.Go(func() error {
@@ -70,6 +70,13 @@ func AccsFactory(privateKeys []string, cfg *config.Config) ([]*Account, error) {
 				return fmt.Errorf("0 actions count. Check config.")
 			}
 
+			var proxy string
+			if len(proxys) > i {
+				proxy = proxys[i]
+			} else {
+				proxy = ""
+			}
+
 			account := &Account{
 				Address:             publicAddr,
 				PrivateKey:          privateKey,
@@ -79,6 +86,7 @@ func AccsFactory(privateKeys []string, cfg *config.Config) ([]*Account, error) {
 				ActionsTime:         10 + randSource.Intn(25),
 				BalancePercentUsage: 30 + randSource.Intn(47),
 				Stats:               0,
+				Proxy:               proxy,
 			}
 
 			mu.Lock()

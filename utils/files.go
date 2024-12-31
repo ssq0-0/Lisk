@@ -69,6 +69,20 @@ func GetPrivateKeys() ([]string, error) {
 	return keys, nil
 }
 
+func GetProxys() ([]string, error) {
+	path := getPath("proxy")
+	proxy, err := FileReader(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(proxy) == 0 {
+		return nil, fmt.Errorf("нет доступных ключей в файле privateKeys.txt")
+	}
+
+	return proxy, nil
+}
+
 func GetConfig() (*config.Config, error) {
 	return config.LoadConfig(getPath("config"))
 }
@@ -77,6 +91,7 @@ func getPath(path string) string {
 	paths := map[string]string{
 		"privateKeys": "account/privateKeys.txt",
 		"config":      "config/config.json",
+		"proxy":       "account/proxy.txt",
 	}
 
 	return paths[path]

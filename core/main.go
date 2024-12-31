@@ -63,7 +63,12 @@ func main() {
 	}
 	logger.GlobalLogger.Infof("Modules have been initialised!")
 
-	accs, err := account.AccsFactory(privateKeys, cfg)
+	proxys, err := utils.GetProxys()
+	if err != nil {
+		logger.GlobalLogger.Warn(err)
+	}
+
+	accs, err := account.AccsFactory(privateKeys, proxys, cfg)
 	if err != nil {
 		logger.GlobalLogger.Error(err)
 		return
