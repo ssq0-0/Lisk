@@ -8,6 +8,10 @@ import (
 	"lisk/logger"
 	"lisk/modules"
 	"lisk/utils"
+	"regexp"
+	"time"
+
+	"github.com/AlecAivazis/survey/v2"
 )
 
 func main() {
@@ -16,19 +20,14 @@ func main() {
 		logger.GlobalLogger.Error(err)
 		return
 	}
-
-	accs, err := account.AccsFactory(privateKeys)
-	if err != nil {
-		logger.GlobalLogger.Error(err)
-		return
-	}
+	logger.GlobalLogger.Infof("Private keys have been initialised!")
 
 	cfg, err := utils.GetConfig()
-	abis, err := utils.ReadAbis(cfg.ABIs)
 	if err != nil {
 		logger.GlobalLogger.Error(err)
 		return
 	}
+	logger.GlobalLogger.Infof("Config have been initialised!")
 
 	clients, err := ethClient.EthClientFactory(cfg.RPC)
 	if err != nil {
@@ -36,16 +35,69 @@ func main() {
 		return
 	}
 	defer ethClient.CloseAllClients(clients)
+	logger.GlobalLogger.Infof("Ethereum clients have been initialised!")
 
-	mods, err := modules.ModulesInit(cfg, abis, clients)
+	abis, err := utils.ReadAbis(cfg.ABIs)
 	if err != nil {
 		logger.GlobalLogger.Error(err)
 		return
 	}
+	logger.GlobalLogger.Infof("ABI's have been initialised!")
 
-	if err := process.ProcessAccount(accs, mods, clients); err != nil {
+	selectModule := userChoice()
+	if selectModule == "" {
+		logger.GlobalLogger.Infof("No module selected or an error occurred. Exiting.")
+		return
+	}
+
+	if selectModule == "Exit" {
+		logger.GlobalLogger.Infof("Finishing the programme.")
+		return
+	}
+	logger.GlobalLogger.Infof("The '%s' module was chosen", selectModule)
+
+	mods, err := modules.ModulesInit(cfg, selectModule, abis, clients)
+	if err != nil {
+		logger.GlobalLogger.Error(err)
+		return
+	}
+	logger.GlobalLogger.Infof("Modules have been initialised!")
+
+	accs, err := account.AccsFactory(privateKeys, cfg)
+	if err != nil {
+		logger.GlobalLogger.Error(err)
+		return
+	}
+	logger.GlobalLogger.Infof("All settings are initialised! Sleep 5 seconds...")
+	time.Sleep(time.Second * 5)
+
+	if err := process.ProcessAccounts(accs, mods, clients); err != nil {
 		logger.GlobalLogger.Error(err)
 		return
 	}
 	fmt.Println("Account processed successfully")
+}
+
+func userChoice() string {
+	modules := []string{
+		"1. Oku",
+		"2. Ionic",
+		"3. Relay",
+		"4. All",
+		"0. Exit",
+	}
+
+	var selected string
+	if err := survey.AskOne(&survey.Select{
+		Message: "Choose module",
+		Options: modules,
+		Default: modules[len(modules)-1],
+	}, &selected); err != nil {
+		logger.GlobalLogger.Errorf("Ошибка выбора модуля: %v", err)
+		return ""
+	}
+
+	rgx := regexp.MustCompile(`^\d+\.\s*`)
+	selected = rgx.ReplaceAllString(selected, "")
+	return selected
 }

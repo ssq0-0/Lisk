@@ -10,6 +10,7 @@ import (
 	"lisk/modules/dex"
 	"lisk/modules/ionic"
 	"lisk/modules/relay"
+	"strings"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -18,8 +19,14 @@ import (
 
 type ModuleFactory func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error)
 
-func ModulesInit(cfg *config.Config, abis map[string]*abi.ABI, clients map[string]*ethClient.Client) (map[string]ModulesFasad, error) {
-	modules := map[string]ModuleFactory{
+func ModulesInit(cfg *config.Config, selectModules string, abis map[string]*abi.ABI, clients map[string]*ethClient.Client) (map[string]ModulesFasad, error) {
+	if strings.Trim(selectModules, "") == "" {
+		return nil, errors.New("no modules to initialize")
+	}
+
+	modules := make(map[string]ModuleFactory)
+
+	allModules := map[string]ModuleFactory{
 		"Oku": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
 			return dex.NewDex(cfg.OkuAddresses, abis["oku"], clients["lisk"])
 		},
@@ -37,8 +44,17 @@ func ModulesInit(cfg *config.Config, abis map[string]*abi.ABI, clients map[strin
 			return relay.NewRelay(relayClients, cfg.Endpoints["relay"])
 		},
 	}
-	if len(modules) == 0 {
-		return nil, errors.New("no modules to initialize")
+
+	if selectModules == "All" {
+		for key, factory := range allModules {
+			modules[key] = factory
+		}
+	} else {
+		factory, exists := allModules[selectModules]
+		if !exists {
+			return nil, fmt.Errorf("selected module '%s' not found", selectModules)
+		}
+		modules[selectModules] = factory
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
