@@ -17,6 +17,10 @@ func init() {
 	}
 
 	Erc20ABI = &parsedABI
+	_, success := MaxRepayBigInt.SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
+	if !success {
+		logger.GlobalLogger.Fatalf("Failed to set MaxRepayBigInt: invalid number")
+	}
 }
 
 var (
@@ -25,6 +29,7 @@ var (
 	ApproveDeadlineOffset = 3600               // 1 hour
 	MaxApprove            = big.NewInt(1e18)
 	Erc20ABI              *abi.ABI
+	MaxRepayBigInt        = new(big.Int)
 
 	WETH   = common.HexToAddress("0x4200000000000000000000000000000000000006")
 	LISK   = common.HexToAddress("0xac485391EB2d7D88253a7F1eF18C37f4242D1A24")

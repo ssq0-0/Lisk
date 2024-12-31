@@ -165,7 +165,7 @@ func (c *Client) ApproveTx(tokenAddr, spender common.Address, acc *account.Accou
 			logger.GlobalLogger.Infof("The current allowance %s is sufficient for the amount of %s, sending an approve transaction is not required.", allowance.String(), amount.String())
 			return nil, nil
 		}
-		approveValue = globals.MaxApprove
+		approveValue = globals.MaxRepayBigInt
 	}
 
 	approveData, err := globals.Erc20ABI.Pack("approve", spender, approveValue)
