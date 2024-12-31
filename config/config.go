@@ -6,6 +6,7 @@ import (
 )
 
 type Config struct {
+	ActionCounts   int               `json:"actions_count"`
 	RPC            map[string]string `json:"rpc"`
 	ABIs           map[string]string `json:"abis"`
 	TokenAddresses map[string]string `json:"token_addresses"`

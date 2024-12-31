@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
+	"lisk/config"
 	"lisk/models"
 	"lisk/utils"
 	"sync"
@@ -20,13 +22,14 @@ type Account struct {
 	PrivateKey          *ecdsa.PrivateKey
 	LastSwaps           []models.SwapPair
 	LiquidityState      *models.LiquidityState
+	Stats               int
 	ActionsCount        int
 	ActionsTime         int
 	BalancePercentUsage int
 	Proxy               string
 }
 
-func AccsFactory(privateKeys []string) ([]*Account, error) {
+func AccsFactory(privateKeys []string, cfg *config.Config) ([]*Account, error) {
 	if len(privateKeys) == 0 {
 		return nil, errors.New("privateKeys list is empty")
 	}
@@ -63,14 +66,19 @@ func AccsFactory(privateKeys []string) ([]*Account, error) {
 				return err
 			}
 
+			if cfg.ActionCounts == 0 {
+				return fmt.Errorf("0 actions count. Check config.")
+			}
+
 			account := &Account{
 				Address:             publicAddr,
 				PrivateKey:          privateKey,
 				LastSwaps:           []models.SwapPair{},
 				LiquidityState:      &models.LiquidityState{},
-				ActionsCount:        3 + randSource.Intn(25),
+				ActionsCount:        cfg.ActionCounts,
 				ActionsTime:         10 + randSource.Intn(25),
-				BalancePercentUsage: 30 + randSource.Intn(40),
+				BalancePercentUsage: 30 + randSource.Intn(47),
+				Stats:               0,
 			}
 
 			mu.Lock()
