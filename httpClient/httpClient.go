@@ -84,6 +84,11 @@ func (h *HttpClient) SendJSONRequest(urlRequest, method string, reqBody, respBod
 	for attempts := 0; attempts < 3; attempts++ {
 		resp, err := h.Client.Do(req)
 		if err != nil {
+			if strings.Contains(err.Error(), "unexpected EOF") {
+				logger.GlobalLogger.Warn("Unexpected EOF encountered. Retrying... Attempt %d", attempts+1)
+				time.Sleep(15 * time.Second)
+				continue
+			}
 			return err
 		}
 		bodyErr := h.checkAndParseResp(resp, respBody)
