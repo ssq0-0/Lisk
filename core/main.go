@@ -50,18 +50,18 @@ func main() {
 		return
 	}
 
-	if selectModule == "Exit" {
-		logger.GlobalLogger.Infof("Finishing the programme.")
-		return
-	}
-	logger.GlobalLogger.Infof("The %s module was chosen", selectModule)
-
-	mods, err := modules.ModulesInit(cfg, selectModule, abis, clients)
+	mods, err := modules.ModulesInit(cfg, abis, clients)
 	if err != nil {
 		logger.GlobalLogger.Error(err)
 		return
 	}
 	logger.GlobalLogger.Infof("Modules have been initialised!")
+
+	if selectModule == "Exit" {
+		logger.GlobalLogger.Infof("Finishing the programme.")
+		return
+	}
+	logger.GlobalLogger.Infof("The %s module was chosen", selectModule)
 
 	proxys, err := utils.GetProxys()
 	if err != nil {
@@ -76,7 +76,7 @@ func main() {
 	logger.GlobalLogger.Infof("All settings are initialised! Sleep 5 seconds...")
 	time.Sleep(time.Second * 5)
 
-	if err := process.ProcessAccounts(accs, mods, clients); err != nil {
+	if err := process.ProcessAccounts(accs, selectModule, mods, clients); err != nil {
 		logger.GlobalLogger.Error(err)
 		return
 	}
@@ -90,6 +90,8 @@ func userChoice() string {
 		"3. Relay",
 		"4. All",
 		"5. Checker",
+		"6. Portal_daily_check",
+		"7. Portal_main_tasks",
 		"0. Exit",
 	}
 
