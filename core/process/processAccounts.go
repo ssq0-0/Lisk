@@ -335,7 +335,7 @@ func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Clien
 	if liqState.ActionCount == 0 {
 		action := ActionProcess{
 			TokenFrom:  globals.USDT,
-			Amount:     big.NewInt(9e4),
+			Amount:     big.NewInt(9e5),
 			TypeAction: globals.Supply,
 			Module:     "Ionic",
 		}
@@ -357,7 +357,7 @@ func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Clien
 			liqState.PendingEnterAfterWithdraw = true
 			action := ActionProcess{
 				TokenFrom:  globals.USDT,
-				Amount:     big.NewInt(1e4),
+				Amount:     big.NewInt(1e5),
 				TypeAction: globals.Supply,
 				Module:     "Ionic",
 			}
@@ -373,11 +373,10 @@ func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Clien
 			return action, nil
 		}
 	}
-
 	if liqState.LastAction == globals.Borrow {
 		action := ActionProcess{
 			TokenFrom:  globals.LISK,
-			Amount:     big.NewInt(1e2),
+			Amount:     big.NewInt(1e17),
 			TypeAction: globals.Repay,
 			Module:     "Ionic",
 		}
@@ -388,7 +387,7 @@ func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Clien
 	if liqState.LastAction == globals.Repay || liqState.LastAction == globals.EnterMarket {
 		action := ActionProcess{
 			TokenFrom:  globals.LISK,
-			Amount:     big.NewInt(1e2),
+			Amount:     big.NewInt(2e17),
 			TypeAction: globals.Borrow,
 			Module:     "Ionic",
 		}

@@ -48,14 +48,13 @@ func (i *Ionic) Action(tokenIn, tokenOut common.Address, amountIn *big.Int, acc 
 			return fmt.Errorf("failed to approve tokens: %w", err)
 		}
 	}
-
 	addressCA := i.prepareCA(tokenIn, operation)
 
 	return i.Client.SendTransaction(acc.PrivateKey, acc.Address, addressCA, i.Client.GetNonce(acc.Address), big.NewInt(0), data)
 }
 
 func (i *Ionic) ensureAllowance(tokenIn common.Address, acc *account.Account, amountIn *big.Int) error {
-	if _, err := i.Client.ApproveTx(tokenIn, i.Tokens[tokenIn], acc, globals.MaxApprove, false); err != nil {
+	if _, err := i.Client.ApproveTx(tokenIn, i.Tokens[tokenIn], acc, globals.MaxRepayBigInt, false); err != nil {
 		return err
 	}
 
@@ -73,7 +72,7 @@ func (i *Ionic) prepareTx(operation globals.ActionType, amountIn *big.Int, token
 	case globals.Repay:
 		return i.ABI.Pack("repayBorrow", amountIn)
 	case globals.EnterMarket:
-		return i.ABI.Pack("enterMarkets", []common.Address{i.Tokens[token]})
+		return i.ABI.Pack("enterMarkets", []common.Address{common.HexToAddress("0x0D72f18BC4b4A2F0370Af6D799045595d806636F")})
 	case globals.ExitMarket:
 		return i.ABI.Pack("exitMarket", i.Tokens[token])
 	default:
