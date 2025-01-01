@@ -24,7 +24,7 @@ func init() {
 }
 
 const (
-	SoftVersion = "2.1.1"
+	SoftVersion = "v2.1.2"
 	LinkRepo    = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 )
 
@@ -63,6 +63,7 @@ var (
 	LimitedModules = map[string]bool{
 		"Portal_daily_check": true,
 		"Portal_main_tasks":  true,
+		"Checker":            true,
 	}
 )
 

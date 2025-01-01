@@ -90,10 +90,6 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 	times := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)
 	totalActions := acc.ActionsCount
 
-	if globals.LimitedModules[selectModule] {
-		totalActions = 1
-	}
-
 	for i := 0; i < totalActions; i++ {
 		if i >= len(times) {
 			newTime := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)[0]
@@ -121,6 +117,10 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 			times = append(times, generateTimeWindow(acc.ActionsTime, acc.ActionsCount)[0])
 			time.Sleep(15 * time.Second)
 			continue
+		}
+
+		if globals.LimitedModules[selectModule] {
+			break
 		}
 
 		acc.Stats += 1
