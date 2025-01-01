@@ -242,7 +242,7 @@ func (c *Client) SendTransaction(privateKey *ecdsa.PrivateKey, ownerAddr, CA com
 		return fmt.Errorf("failed to send transaction: %v", err)
 	}
 
-	logger.GlobalLogger.Infof("Transaction sent: https://blockscout.lisk.com/tx/%s", signedTx.Hash().Hex())
+	logger.GlobalLogger.Infof("[NONCE: %v] Transaction sent: https://blockscout.lisk.com/tx/%s", nonce, signedTx.Hash().Hex())
 
 	return c.waitForTransactionSuccess(signedTx.Hash(), 1*time.Minute)
 }
@@ -262,14 +262,12 @@ func (c *Client) waitForTransactionSuccess(txHash common.Hash, timeout time.Dura
 			receipt, err := c.Client.TransactionReceipt(context.Background(), txHash)
 			if err != nil {
 				if err.Error() == "not found" {
-					logger.GlobalLogger.Infof("Transaction %s not yet found in the blockchain, retrying...", txHash.Hex())
 					continue
 				}
 				return fmt.Errorf("error getting transaction receipt: %v", err)
 			}
 
 			if receipt.Status == 1 {
-				logger.GlobalLogger.Infof("Transaction %s succeeded", txHash.Hex())
 				return nil
 			} else {
 				c.logTransactionError(txHash, receipt)

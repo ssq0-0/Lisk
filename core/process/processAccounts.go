@@ -81,8 +81,7 @@ func processSingleAccount(ctx context.Context, acc *account.Account, selectModul
 		return fmt.Errorf("account %s: performActions error: %w", acc.Address.Hex(), err)
 	}
 
-	logger.GlobalLogger.Infof("The job is done. Account statistics: wallet: %s Success actions: %d",
-		acc.Address.Hex(), acc.Stats)
+	logger.GlobalLogger.Infof("The job is done. Account statistics: wallet: %s Success actions: %d", acc.Address.Hex(), acc.Stats)
 
 	return nil
 }
@@ -90,6 +89,10 @@ func processSingleAccount(ctx context.Context, acc *account.Account, selectModul
 func performActions(acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
 	times := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)
 	totalActions := acc.ActionsCount
+
+	if globals.LimitedModules[selectModule] {
+		totalActions = 1
+	}
 
 	for i := 0; i < totalActions; i++ {
 		if i >= len(times) {
@@ -99,6 +102,7 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 
 		action, err := generateNextAction(acc, selectModule, clients)
 		if err != nil {
+			logger.GlobalLogger.Warn(err)
 			totalActions++
 			continue
 		}

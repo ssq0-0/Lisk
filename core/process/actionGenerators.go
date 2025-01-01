@@ -90,7 +90,7 @@ func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Clien
 	if liqState.ActionCount == 0 {
 		action := ActionProcess{
 			TokenFrom:  globals.USDT,
-			Amount:     big.NewInt(9e5),
+			Amount:     big.NewInt(1e6),
 			TypeAction: globals.Supply,
 			Module:     "Ionic",
 		}
@@ -118,20 +118,13 @@ func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Clien
 			}
 			updateLiquidityState(acc, action.TypeAction)
 			return action, nil
-		} else {
-			liqState.PendingEnterAfterWithdraw = false
-			action := ActionProcess{
-				TypeAction: globals.EnterMarket,
-				Module:     "Ionic",
-			}
-			updateLiquidityState(acc, action.TypeAction)
-			return action, nil
 		}
 	}
+
 	if liqState.LastAction == globals.Borrow {
 		action := ActionProcess{
 			TokenFrom:  globals.LISK,
-			Amount:     big.NewInt(1e17),
+			Amount:     big.NewInt(19e16),
 			TypeAction: globals.Repay,
 			Module:     "Ionic",
 		}
@@ -144,17 +137,6 @@ func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Clien
 			TokenFrom:  globals.LISK,
 			Amount:     big.NewInt(2e17),
 			TypeAction: globals.Borrow,
-			Module:     "Ionic",
-		}
-		updateLiquidityState(acc, action.TypeAction)
-		return action, nil
-	}
-
-	if liqState.LastAction == globals.Supply {
-		action := ActionProcess{
-			TokenFrom:  globals.USDT,
-			Amount:     big.NewInt(1e4),
-			TypeAction: globals.Supply,
 			Module:     "Ionic",
 		}
 		updateLiquidityState(acc, action.TypeAction)

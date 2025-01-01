@@ -59,6 +59,11 @@ var (
 		USDC: big.NewInt(1e5),
 		LISK: big.NewInt(1e18),
 	}
+
+	LimitedModules = map[string]bool{
+		"Portal_daily_check": true,
+		"Portal_main_tasks":  true,
+	}
 )
 
 var (

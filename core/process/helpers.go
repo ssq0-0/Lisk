@@ -102,6 +102,12 @@ func excludeSwap(tokenFrom, tokenTo common.Address) bool {
 		globals.USDT: {
 			globals.LISK: true,
 		},
+		globals.USDC: {
+			globals.WETH: true,
+		},
+		globals.WETH: {
+			globals.USDC: true,
+		},
 	}
 
 	if tos, exists := excludedPairs[tokenFrom]; exists {
