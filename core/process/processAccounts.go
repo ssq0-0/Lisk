@@ -102,7 +102,6 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 
 		action, err := generateNextAction(acc, selectModule, clients)
 		if err != nil {
-			logger.GlobalLogger.Warn(err)
 			totalActions++
 			continue
 		}
