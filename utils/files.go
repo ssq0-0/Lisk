@@ -77,7 +77,7 @@ func GetProxys() ([]string, error) {
 	}
 
 	if len(proxy) == 0 {
-		return nil, fmt.Errorf("нет доступных ключей в файле privateKeys.txt")
+		return nil, fmt.Errorf("нет доступных ключей в файле proxy.txt")
 	}
 
 	return proxy, nil

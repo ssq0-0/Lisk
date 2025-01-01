@@ -57,7 +57,7 @@ type GraphQLRequest struct {
 	Variables map[string]interface{} `json:"variables"`
 }
 
-type GraphQLResponse struct {
+type TaskResponse struct {
 	Data struct {
 		Userdrop struct {
 			User struct {
@@ -65,6 +65,13 @@ type GraphQLResponse struct {
 				Points   int    `json:"points"`
 				UpdateAt string `json:"updatedAt"`
 			} `json:"user"`
+			UpdateTaskStatus struct {
+				Success  bool `json:"success"`
+				Progress struct {
+					IsCompleted bool   `json:"isCompleted"`
+					CompletedAt string `json:"completedAt"`
+				} `json:"progress"`
+			} `json:"updateTaskStatus"`
 		} `json:"userdrop"`
 	} `json:"data"`
 	Errors []struct {

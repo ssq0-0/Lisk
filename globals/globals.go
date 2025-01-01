@@ -49,9 +49,9 @@ var (
 	}
 
 	MinBalances = map[common.Address]*big.Int{
-		WETH: big.NewInt(1e15),
-		USDT: big.NewInt(3e6),
-		USDC: big.NewInt(3e6),
+		WETH: big.NewInt(1e14),
+		USDT: big.NewInt(1e5),
+		USDC: big.NewInt(1e5),
 		LISK: big.NewInt(1e18),
 	}
 )

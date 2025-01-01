@@ -16,6 +16,17 @@ const (
 	LineaBridge    ActionType = "linea"
 	BaseBridge     ActionType = "base"
 	Checker        ActionType = "checker"
+	DailyCheck     ActionType = "dailyCheck"
+	MainTasks      ActionType = "mainTasks"
+	HoldETH        ActionType = "holdETH"
+	HoldLISK       ActionType = "holdLISK"
+	HoldUSDT       ActionType = "holdUSDT"
+	HoldUSDC       ActionType = "holdUSDC"
+	HoldNFT        ActionType = "holdNFT"
+	TwitterDiscord ActionType = "twitterDiscord"
+	FonbnkVerif    ActionType = "fonbunkVerif"
+	XelarkVerif    ActionType = "xelarVerif"
+	Gitcoin        ActionType = "gitcoin"
 )
 
 var (
@@ -25,6 +36,25 @@ var (
 		"arbitrum": ArbitrumBridge,
 		"optimism": OptimismBridge,
 		"linea":    LineaBridge,
+	}
+	LiskPortalIDs = map[ActionType]map[ActionType]int{
+		MainTasks: map[ActionType]int{
+			HoldETH:        6,
+			HoldLISK:       7,
+			HoldUSDC:       8,
+			HoldUSDT:       9,
+			HoldNFT:        15,
+			TwitterDiscord: 11,
+			FonbnkVerif:    13,
+			XelarkVerif:    14,
+			Gitcoin:        12,
+		},
+		DailyCheck: map[ActionType]int{
+			DailyCheck: 1,
+		},
+		Checker: map[ActionType]int{
+			Checker: 100,
+		},
 	}
 )
 
