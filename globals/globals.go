@@ -24,7 +24,7 @@ func init() {
 }
 
 const (
-	SoftVersion = "2.1.1"
+	SoftVersion = "2.1.2"
 	LinkRepo    = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 )
 
