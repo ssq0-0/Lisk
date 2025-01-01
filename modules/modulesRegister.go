@@ -6,7 +6,6 @@ import (
 	"lisk/config"
 	"lisk/ethClient"
 	"lisk/globals"
-	"lisk/modules/checkers"
 	"lisk/modules/dex"
 	"lisk/modules/ionic"
 	"lisk/modules/liskPortal"
@@ -37,11 +36,8 @@ func ModulesInit(cfg *config.Config, abis map[string]*abi.ABI, clients map[strin
 
 			return relay.NewRelay(relayClients, cfg.Endpoints["relay"])
 		},
-		"Checker": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
-			return checkers.NewChecker(cfg.Endpoints["top"])
-		},
 		"Portal": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
-			return liskPortal.NewPortal(cfg.Endpoints["lisk-portal"])
+			return liskPortal.NewPortal(cfg.Endpoints["lisk_portal"], cfg.Endpoints["top"])
 		},
 	}
 
