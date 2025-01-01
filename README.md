@@ -13,6 +13,9 @@
 - **Lending Protocols**: Supports borrowing, lending, and collateral management.
 - **Modular Design**: Easily extendable with new modules.
 - **Comprehensive Logging**: Tracks transactions and provides debugging information.
+- **Top Cheker**: Checking accounts in the leaderboard. Logging the number of points, place in the table and time of the last update
+- **Task performer**: Marks all available assignments complete, provided they are completed in advance. Also - daily task
+- **Version control system**: Automatic checking of the software version relevance and registration of warnings in case of an update, as well as a link to the new release
 
 ---
 ## Installation
@@ -55,12 +58,17 @@ This section defines the wallets used by the software. Each wallet is described 
 
 This section defines the proxy used by the program. Each proxy is described by the following fields:
 
-- **`user:pass@ip:port`**:
+- **`http://user:pass@ip:port`**:
 ---
 
 ### Modules (`modules`)
 
 - Oku. Dex swaps.
 - Ionic. Luquidity proocol.
+- Relay. Bridge from other L2 chains to LISK.
+- Top Checker.
+- Task Performer.
+- Daily checker.
+- Version control.
 
 ### For additional assistance or troubleshooting, refer to the official documentation or reach out via [support channel](https://t.me/cheifssq).

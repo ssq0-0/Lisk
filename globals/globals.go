@@ -23,6 +23,11 @@ func init() {
 	}
 }
 
+const (
+	SoftVersion = "2.1.1"
+	LinkRepo    = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
+)
+
 var (
 	Slippage              = big.NewFloat(0.01) // 1% проскальзывания
 	DefaultDeadlineOffset = 120                // 2 minutes

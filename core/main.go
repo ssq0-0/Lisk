@@ -15,6 +15,11 @@ import (
 )
 
 func main() {
+	logger.GlobalLogger.Warn("Minimum balances to perform activities: USDT/USDC($1) OR WETH($1)")
+	if err := utils.CheckVersion(); err != nil {
+		logger.GlobalLogger.Warn(err)
+	}
+
 	privateKeys, err := utils.GetPrivateKeys()
 	if err != nil {
 		logger.GlobalLogger.Error(err)

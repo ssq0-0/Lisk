@@ -78,3 +78,8 @@ type TaskResponse struct {
 		Message string `json:"message"`
 	} `json:"errors"`
 }
+
+type VersionInfo struct {
+	TagName string `json:"tag_name"`
+	HTMLURL string `json:"html_url"`
+}
