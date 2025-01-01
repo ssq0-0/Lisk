@@ -36,6 +36,7 @@ go mod download
 go build -o Lisk ./core/main.go   
 ```
 2. Run the application:
+- **Setup config.json(time and count actions)**
 
 ```bash
 ./Lisk
