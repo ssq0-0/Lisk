@@ -22,7 +22,7 @@ var actionGenerators = map[string]func(acc *account.Account, clients map[string]
 }
 
 func generateChecker(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	return ActionProcess{TypeAction: globals.Checker, Module: "Checker"}, nil
+	return ActionProcess{TypeAction: globals.Checker, Module: "Portal"}, nil
 }
 func generateDailyCheck(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
 	return ActionProcess{TypeAction: globals.DailyCheck, Module: "Portal"}, nil

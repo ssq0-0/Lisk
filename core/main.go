@@ -88,10 +88,9 @@ func userChoice() string {
 		"1. Oku",
 		"2. Ionic",
 		"3. Relay",
-		"4. All",
-		"5. Checker",
-		"6. Portal_daily_check",
-		"7. Portal_main_tasks",
+		"4. Checker",
+		"5. Portal_daily_check",
+		"6. Portal_main_tasks",
 		"0. Exit",
 	}
 

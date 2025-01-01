@@ -70,13 +70,7 @@ func getMaxBalance(acc *account.Account, clients map[string]*ethClient.Client) (
 	return maxChain, maxBal, nil
 }
 
-func generateNextAction(acc *account.Account, availableModules []string, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	if len(availableModules) == 0 {
-		return ActionProcess{TypeAction: globals.Unknown}, fmt.Errorf("no available modules for account %s", acc.Address.Hex())
-	}
-
-	selectedModule := availableModules[rand.Intn(len(availableModules))]
-
+func generateNextAction(acc *account.Account, selectedModule string, clients map[string]*ethClient.Client) (ActionProcess, error) {
 	generator, exists := actionGenerators[selectedModule]
 	if !exists {
 		return ActionProcess{TypeAction: globals.Unknown}, fmt.Errorf("no action generator for module '%s'", selectedModule)
