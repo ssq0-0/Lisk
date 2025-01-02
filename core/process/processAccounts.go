@@ -91,6 +91,7 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 	totalActions := acc.ActionsCount
 
 	for i := 0; i < totalActions; i++ {
+
 		if i >= len(times) {
 			newTime := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)[0]
 			times = append(times, newTime)
@@ -119,11 +120,12 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 			continue
 		}
 
-		if globals.LimitedModules[selectModule] {
+		acc.Stats += 1
+
+		if i+1 == globals.LimitedModules[selectModule] {
 			break
 		}
 
-		acc.Stats += 1
 		logger.GlobalLogger.Infof("The action for account %v has been completed. Sleep %v before the next action.", acc.Address.Hex(), times[i])
 		time.Sleep(times[i])
 	}

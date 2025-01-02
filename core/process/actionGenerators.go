@@ -15,6 +15,7 @@ import (
 var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
 	"Oku":                generateSwap,
 	"Ionic":              generateLiquidity,
+	"IonicWithdraw":      generateIonicWithdraw,
 	"Relay":              generateBridgeToLisk,
 	"Checker":            generateChecker,
 	"Portal_daily_check": generateDailyCheck,
@@ -144,6 +145,33 @@ func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Clien
 	}
 
 	return ActionProcess{TypeAction: globals.Unknown}, nil
+}
+
+func generateIonicWithdraw(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	if acc.LiquidityState.ActionCount == 0 {
+		actions := ActionProcess{
+			TokenFrom:  globals.USDT,
+			TypeAction: globals.ExitMarket,
+			Module:     "Ionic",
+		}
+
+		updateLiquidityState(acc, globals.ExitMarket)
+		return actions, nil
+	}
+
+	if acc.LiquidityState.LastAction == globals.ExitMarket {
+		actions := ActionProcess{
+			Amount:     globals.MaxRepayBigInt,
+			TokenFrom:  globals.USDT,
+			TypeAction: globals.Redeem,
+			Module:     "Ionic",
+		}
+
+		updateLiquidityState(acc, globals.Redeem)
+		return actions, nil
+	}
+
+	return ActionProcess{}, fmt.Errorf("Unknow action")
 }
 
 func generateBridgeToLisk(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
