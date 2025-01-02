@@ -43,7 +43,7 @@ func (i *Ionic) Action(tokenIn, tokenOut common.Address, amountIn *big.Int, acc 
 	}
 
 	switch operation {
-	case globals.Supply, globals.Repay, globals.Redeem:
+	case globals.Supply, globals.Repay:
 		if err := i.ensureAllowance(tokenIn, acc, amountIn); err != nil {
 			return fmt.Errorf("failed to approve tokens: %w", err)
 		}

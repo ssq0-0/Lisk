@@ -41,7 +41,6 @@ var (
 	USDC   = common.HexToAddress("0xF242275d3a6527d877f2c927a82D9b057609cc71")
 	USDT   = common.HexToAddress("0x05D032ac25d322df992303dCa074EE7392C117b9")
 	NATIVE = common.Address{}
-	// WBTC = common.HexToAddress("0x03C7054BCB39f7b2e5B2c7AcB37583e32D70Cfa3")
 
 	TokensDecimals = map[common.Address]PoolInfo{
 		common.HexToAddress("0x87D3d9CA455DCc9a3Ba5605D2829d994922DD04F"): PoolInfo{Token0: 6, Token1: 6},
@@ -60,10 +59,11 @@ var (
 		LISK: big.NewInt(1e18),
 	}
 
-	LimitedModules = map[string]bool{
-		"Portal_daily_check": true,
-		"Portal_main_tasks":  true,
-		"Checker":            true,
+	LimitedModules = map[string]int{
+		"Portal_daily_check": 1,
+		"Portal_main_tasks":  1,
+		"Checker":            1,
+		"IonicWithdraw":      2,
 	}
 )
 

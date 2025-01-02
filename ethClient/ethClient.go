@@ -119,7 +119,7 @@ func (c *Client) GetGasValues(msg ethereum.CallMsg) (uint64, *big.Int, *big.Int,
 		return 0, nil, nil, err
 	}
 
-	maxPriorityFeePerGas := big.NewInt(1e8)
+	maxPriorityFeePerGas := big.NewInt(1e7)
 	maxFeePerGas := new(big.Int).Add(header.BaseFee, maxPriorityFeePerGas)
 
 	gasLimit, err := c.Client.EstimateGas(context.Background(), msg)

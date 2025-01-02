@@ -65,7 +65,8 @@ This section defines the proxy used by the program. Each proxy is described by t
 ### Modules (`modules`)
 
 - Oku. Dex swaps.
-- Ionic. Luquidity proocol.
+- Ionic. Supply and cycle repay + borrow.
+- IonicWithdraw. Withdraw all balance. You must repay all funds before this module if there have been loans.
 - Relay. Bridge from other L2 chains to LISK.
 - Top Checker.
 - Task Performer.

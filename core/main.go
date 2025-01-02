@@ -15,7 +15,8 @@ import (
 )
 
 func main() {
-	logger.GlobalLogger.Warn("Minimum balances to perform activities: USDT/USDC($1) OR WETH($1)")
+	utils.PrintStartMessage()
+
 	if err := utils.CheckVersion(); err != nil {
 		logger.GlobalLogger.Warn(err)
 	}
@@ -92,10 +93,11 @@ func userChoice() string {
 	modules := []string{
 		"1. Oku",
 		"2. Ionic",
-		"3. Relay",
-		"4. Checker",
-		"5. Portal_daily_check",
-		"6. Portal_main_tasks",
+		"3. IonicWithdraw",
+		"4. Relay",
+		"5. Checker",
+		"6. Portal_daily_check",
+		"7. Portal_main_tasks",
 		"0. Exit",
 	}
 
