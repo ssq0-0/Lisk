@@ -83,3 +83,9 @@ type VersionInfo struct {
 	TagName string `json:"tag_name"`
 	HTMLURL string `json:"html_url"`
 }
+
+type StatRecord struct {
+	TotalSuccess int
+	TodayDate    int // YYYYMMDD
+	TodaySuccess int
+}

@@ -1,6 +1,7 @@
 package globals
 
 type ActionType string
+type StatKey string
 
 const (
 	Unknown        ActionType = "unknown"

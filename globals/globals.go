@@ -3,6 +3,7 @@ package globals
 import (
 	"bytes"
 	"lisk/logger"
+	"time"
 
 	"math/big"
 
@@ -24,12 +25,30 @@ func init() {
 }
 
 const (
-	SoftVersion = "v2.1.2"
-	LinkRepo    = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
+	SoftVersion  = "v2.2.3"
+	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
+	Format       = "02.01.2006"
+	TotalSuccess = 0
+	TodaySuccess = 1
+	ConsoleTitle = "Lisk | cheif.ssq"
 )
 
 var (
-	Slippage              = big.NewFloat(0.01) // 1% проскальзывания
+	// StartDate sets the start date for calculating the week number.
+	// Date format: time.Time
+	// Example: 1 January 2025, time 00:00:00 UTC
+	// Otherwise: 2025.01.01 00:00:00
+	StartDate = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	// USDT/USDC have 6 decimal => 6 '0' after ' , '
+	// Example 1 USDC => 1_000_000.
+	// Example 1.1 USDC => 11_000_00
+	IonicBorrow = big.NewInt(15_000_0) // 0,15 USDC
+
+	// For a successful supply/borrow/return cycle, you need to make supply at least 66% more than you want to reciprocate.
+	IonicSupply = big.NewInt(33_000_0) // 0,33 USDT
+
+	Slippage              = big.NewFloat(0.01) // 1%
 	DefaultDeadlineOffset = 120                // 2 minutes
 	ApproveDeadlineOffset = 3600               // 1 hour
 	MaxApprove            = big.NewInt(1e18)
@@ -41,6 +60,7 @@ var (
 	USDC   = common.HexToAddress("0xF242275d3a6527d877f2c927a82D9b057609cc71")
 	USDT   = common.HexToAddress("0x05D032ac25d322df992303dCa074EE7392C117b9")
 	NATIVE = common.Address{}
+	NULL   = common.Address{} // need for minor functions
 
 	TokensDecimals = map[common.Address]PoolInfo{
 		common.HexToAddress("0x87D3d9CA455DCc9a3Ba5605D2829d994922DD04F"): PoolInfo{Token0: 6, Token1: 6},
@@ -64,6 +84,8 @@ var (
 		"Portal_main_tasks":  1,
 		"Checker":            1,
 		"IonicWithdraw":      2,
+		"Ionic71Supply":      72,
+		"Ionic71Borrow":      72,
 	}
 )
 
