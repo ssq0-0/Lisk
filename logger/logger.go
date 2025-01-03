@@ -1,6 +1,12 @@
 package logger
 
-import "github.com/sirupsen/logrus"
+import (
+	"io"
+	"os"
+
+	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/writer"
+)
 
 type Fields map[string]interface{}
 
@@ -49,10 +55,18 @@ func New(level LoggerLevel) Logger {
 
 	lgr := logrus.New()
 	lgr.SetLevel(logrusLevel)
+	lgr.SetOutput(io.Discard)
 
+	// Настраиваем форматтер (например, JSON)
 	lgr.SetFormatter(&logrus.TextFormatter{
 		ForceColors:   true,
 		FullTimestamp: true,
+	})
+
+	// Добавляем асинхронный хук для записи в os.Stdout
+	lgr.AddHook(&writer.Hook{
+		Writer:    os.Stdout,
+		LogLevels: logrus.AllLevels,
 	})
 
 	return logger{lgr}
