@@ -75,12 +75,12 @@ For example you have chosen 5 actions and 10 minutes => actions will be repeated
 
 ### Modules (`modules`)
 
-- Oku. Dex swaps.
+- Oku. Random dex swaps.
 - Ionic. Supply, repay + withdraw, borrow.
-- Relay. Bridge from other L2 chains to LISK.
-- Top Checker.
-- Task Performer.
-- Daily checker.
+- Relay. Bridge ETH from other L2 chains to LISK.
+- Top Checker. Makes a request to the platform and checks your rank+place+date of last updated information
+- Task Performer. Collects points for completed tasks on the platform
+- Daily checker. Makes a daily check on the platform
 - Version control.
 
 ### For additional assistance or troubleshooting, refer to the official documentation or reach out via [support channel](https://t.me/cheifssq).
