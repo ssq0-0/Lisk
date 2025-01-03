@@ -12,7 +12,7 @@ import (
 )
 
 func ParsePrivateKey(hexKey string) (*ecdsa.PrivateKey, error) {
-	if len(hexKey) != 64 && len(hexKey) != 66 { // Учитываем возможность наличия "0x"
+	if len(hexKey) != 64 && len(hexKey) != 66 {
 		return nil, errors.New("invalid private key format: incorrect length")
 	}
 
