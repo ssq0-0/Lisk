@@ -63,7 +63,14 @@ This section defines the proxy used by the program. Each proxy is described by t
 ---
 ### Config (`config.json`)
 
-Setup your config
+1. Customise your configuration. There are two fields you can operate on: ‘actions_count’ and ‘max_actions_time’. The first one is responsible for the number of actions in case of Oku & Relay, and the second one for the programme execution time. 
+
+For example you have chosen 5 actions and 10 minutes => actions will be repeated every 2 minutes +-.
+
+2. **globals.go** 
+- In this file, you can configure the start date of the software to track progress in a specified format in the comments
+- You can change the values of Borrow & Supply. The format is specified in the comments
+
 ---
 
 ### Modules (`modules`)
