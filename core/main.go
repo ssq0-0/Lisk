@@ -5,16 +5,15 @@ import (
 	"lisk/account"
 	"lisk/core/process"
 	"lisk/ethClient"
+	"lisk/globals"
 	"lisk/logger"
 	"lisk/modules"
 	"lisk/utils"
-	"regexp"
 	"time"
-
-	"github.com/AlecAivazis/survey/v2"
 )
 
 func main() {
+	_ = utils.SetConsoleTitle(globals.ConsoleTitle)
 	utils.PrintStartMessage()
 
 	if err := utils.CheckVersion(); err != nil {
@@ -50,8 +49,8 @@ func main() {
 	}
 	logger.GlobalLogger.Infof("ABI's have been initialised!")
 
-	selectModule := userChoice()
-	if selectModule == "" {
+	selectModule := utils.UserChoice()
+	if selectModule == "" || selectModule == "Exit" {
 		logger.GlobalLogger.Infof("No module selected or an error occurred. Exiting.")
 		return
 	}
@@ -63,18 +62,12 @@ func main() {
 	}
 	logger.GlobalLogger.Infof("Modules have been initialised!")
 
-	if selectModule == "Exit" {
-		logger.GlobalLogger.Infof("Finishing the programme.")
-		return
-	}
-	logger.GlobalLogger.Infof("The %s module was chosen", selectModule)
-
-	proxys, err := utils.GetProxys()
+	proxies, err := utils.GetProxies()
 	if err != nil {
 		logger.GlobalLogger.Warn(err)
 	}
 
-	accs, err := account.AccsFactory(privateKeys, proxys, cfg)
+	accs, err := account.AccsFactory(privateKeys, proxies, cfg)
 	if err != nil {
 		logger.GlobalLogger.Error(err)
 		return
@@ -87,31 +80,4 @@ func main() {
 		return
 	}
 	fmt.Println("Account processed successfully")
-}
-
-func userChoice() string {
-	modules := []string{
-		"1. Oku",
-		"2. Ionic",
-		"3. IonicWithdraw",
-		"4. Relay",
-		"5. Checker",
-		"6. Portal_daily_check",
-		"7. Portal_main_tasks",
-		"0. Exit",
-	}
-
-	var selected string
-	if err := survey.AskOne(&survey.Select{
-		Message: "Choose module",
-		Options: modules,
-		Default: modules[len(modules)-1],
-	}, &selected); err != nil {
-		logger.GlobalLogger.Errorf("Ошибка выбора модуля: %v", err)
-		return ""
-	}
-
-	rgx := regexp.MustCompile(`^\d+\.\s*`)
-	selected = rgx.ReplaceAllString(selected, "")
-	return selected
 }
