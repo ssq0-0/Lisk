@@ -14,6 +14,17 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
+	"Oku":                generateSwap,
+	"IonicWithdraw":      generateIonicWithdraw,
+	"Ionic15Borrow":      generate15Borrow(globals.Borrow, globals.LISK, globals.IonicBorrow),
+	"Ionic71Supply":      generateIonic71Supply,
+	"Relay":              generateBridgeToLisk,
+	"Checker":            generateChecker,
+	"Portal_daily_check": generateDailyCheck,
+	"Portal_main_tasks":  generateMainTasks,
+}
+
 func generateTimeWindow(totalTime, actionCount int) []time.Duration {
 	if actionCount <= 0 {
 		return nil
@@ -103,7 +114,7 @@ func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (A
 	return packActionProcessStruct(globals.Swap, "Oku", amount, tokenFrom, tokenTo), nil
 }
 
-func generate71Borrow(actionType globals.ActionType, token common.Address, amount *big.Int) func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+func generate15Borrow(actionType globals.ActionType, token common.Address, amount *big.Int) func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
 	return func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
 		if actionType == globals.Borrow && acc.LiquidityState.ActionCount == 0 {
 			acc.LiquidityState.ActionCount++
