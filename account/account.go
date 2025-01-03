@@ -22,7 +22,8 @@ type Account struct {
 	PrivateKey          *ecdsa.PrivateKey
 	LastSwaps           []models.SwapPair
 	LiquidityState      *models.LiquidityState
-	Stats               int
+	Stats               map[string]int
+	Mu                  sync.Mutex
 	ActionsCount        int
 	ActionsTime         int
 	BalancePercentUsage int
@@ -85,7 +86,7 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 				ActionsCount:        cfg.ActionCounts,
 				ActionsTime:         cfg.MaxActionsTime,
 				BalancePercentUsage: 30 + randSource.Intn(47),
-				Stats:               0,
+				Stats:               make(map[string]int),
 				Proxy:               proxy,
 			}
 
