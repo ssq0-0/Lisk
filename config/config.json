@@ -1,6 +1,6 @@
 {
-    "actions_count":1,
-    "max_actions_time":1,
+    "actions_count":15,
+    "max_actions_time":5,
     "oku_addresses":{
         "swap_router":"0x447B8E40B0CdA8e55F405C86bC635D02d0540aB8",
         "permit":"0xB952578f3520EE8Ea45b7914994dcf4702cEe578",

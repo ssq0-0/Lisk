@@ -83,9 +83,11 @@ func excludeSwap(tokenFrom, tokenTo common.Address) bool {
 		},
 		globals.USDC: {
 			globals.WETH: true,
+			globals.LISK: true,
 		},
 		globals.WETH: {
 			globals.USDC: true,
+			globals.LISK: true,
 		},
 	}
 

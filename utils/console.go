@@ -41,7 +41,7 @@ func UserChoice() string {
 	subMenus := map[string][]string{
 		"Ionic": {
 			"1. Ionic71Supply",
-			"2. Ionic71Borrow",
+			"2. Ionic15Borrow",
 			"3. IonicWithdraw",
 			"0. Back",
 		},

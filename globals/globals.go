@@ -25,7 +25,7 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.2.4"
+	SoftVersion  = "v2.2.5"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -85,7 +85,7 @@ var (
 		"Checker":            1,
 		"IonicWithdraw":      2,
 		"Ionic71Supply":      72,
-		"Ionic71Borrow":      72,
+		"Ionic71Borrow":      15,
 	}
 )
 
