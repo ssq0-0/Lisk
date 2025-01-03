@@ -162,7 +162,6 @@ func (c *Client) ApproveTx(tokenAddr, spender common.Address, acc *account.Accou
 		approveValue = big.NewInt(0)
 	} else {
 		if allowance.Cmp(amount) >= 0 {
-			logger.GlobalLogger.Infof("The current allowance %s is sufficient for the amount of %s, sending an approve transaction is not required.", allowance.String(), amount.String())
 			return nil, nil
 		}
 		approveValue = globals.MaxRepayBigInt
