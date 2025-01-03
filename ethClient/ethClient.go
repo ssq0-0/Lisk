@@ -260,7 +260,7 @@ func (c *Client) waitForTransactionSuccess(txHash common.Hash, timeout time.Dura
 		case <-ticker.C:
 			receipt, err := c.Client.TransactionReceipt(context.Background(), txHash)
 			if err != nil {
-				if err.Error() == "not found" {
+				if isUnknownBlockError(err) {
 					continue
 				}
 				return fmt.Errorf("error getting transaction receipt: %v", err)
@@ -363,4 +363,25 @@ func (c *Client) logTransactionError(txHash common.Hash, receipt *types.Receipt)
 	logger.GlobalLogger.Warnf("  Nonce: %d", tx.Nonce())
 	logger.GlobalLogger.Warnf("  Data: %x", tx.Data())
 	logger.GlobalLogger.Warnf("  Pending: %v", isPending)
+}
+
+func isUnknownBlockError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+
+	if strings.Contains(errMsg, "Unknown block") {
+		return true
+	}
+
+	if strings.Contains(errMsg, "You reached the free tier limits, please upgrade your tier to paid one") {
+		return true
+	}
+
+	if strings.Contains(errMsg, "not found") {
+		return true
+	}
+
+	return false
 }
