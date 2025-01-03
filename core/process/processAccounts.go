@@ -16,17 +16,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
-	"Oku":                generateSwap,
-	"IonicWithdraw":      generateIonicWithdraw,
-	"Ionic71Borrow":      generate71Borrow(globals.Borrow, globals.LISK, globals.IonicBorrow),
-	"Ionic71Supply":      generateIonic71Supply,
-	"Relay":              generateBridgeToLisk,
-	"Checker":            generateChecker,
-	"Portal_daily_check": generateDailyCheck,
-	"Portal_main_tasks":  generateMainTasks,
-}
-
 type ActionProcess struct {
 	TokenFrom  common.Address
 	TokenTo    common.Address
@@ -102,47 +91,53 @@ func processSingleAccount(ctx context.Context, acc *account.Account, selectModul
 }
 
 func performActions(acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
-	times := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)
-
 	totalActions, exists := globals.LimitedModules[selectModule]
 	if !exists {
 		totalActions = acc.ActionsCount
 	}
 
-	for i := 0; i < totalActions; i++ {
+	const maxRetriesPerAction = 3
 
-		if i >= len(times) {
-			newTime := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)[0]
-			times = append(times, newTime)
-		}
+	var successfulActions int
+
+	for successfulActions < totalActions {
+		sleepDuration := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)[0]
 
 		action, err := generateNextAction(acc, selectModule, clients)
 		if err != nil {
-			totalActions++
+			logger.GlobalLogger.Warnf("Cannot generate action: %v", err)
 			continue
 		}
 
-		logger.GlobalLogger.Infof("Processing action for %s: %v, type: %v", acc.Address.Hex(), action.Module, action.TypeAction)
+		retryCount := 0
+	actionLoop:
+		for {
+			moduleFasad, exists := mod[action.Module]
+			if !exists || moduleFasad == nil {
+				logger.GlobalLogger.Warnf("Module '%s' not found. Skipping action.", action.Module)
+				break actionLoop
+			}
 
-		moduleFasad, exists := mod[action.Module]
-		if !exists || moduleFasad == nil {
-			logger.GlobalLogger.Warnf("Module '%s' not found for action. Will add a new attempt.", action.Module)
-			totalActions++
-			continue
+			if err := moduleFasad.Action(action.TokenFrom, action.TokenTo, action.Amount, acc, action.TypeAction); err != nil {
+				retryCount++
+				if retryCount <= maxRetriesPerAction {
+					logger.GlobalLogger.Warnf("Action failed: %v. Retry %d of %d...", err, retryCount, maxRetriesPerAction)
+					time.Sleep(5 * time.Second)
+					continue
+				} else {
+					logger.GlobalLogger.Errorf("Action failed after %d retries. Skip action.", maxRetriesPerAction)
+					break actionLoop
+				}
+			}
+
+			acc.Stats[selectModule]++
+			successfulActions++
+
+			logger.GlobalLogger.Infof("Action for account %v has been completed. Sleep %v", acc.Address.Hex(), sleepDuration)
+			time.Sleep(sleepDuration)
+
+			break actionLoop
 		}
-
-		if err := moduleFasad.Action(action.TokenFrom, action.TokenTo, action.Amount, acc, action.TypeAction); err != nil {
-			logger.GlobalLogger.Warnf("Failed to perform action: %v. Adding a new attempt and Sleep 15 seconds.", err)
-			totalActions++
-			times = append(times, generateTimeWindow(acc.ActionsTime, acc.ActionsCount)[0])
-			time.Sleep(15 * time.Second)
-			continue
-		}
-
-		acc.Stats[selectModule] += 1
-
-		logger.GlobalLogger.Infof("The action for account %v has been completed. Sleep %v before the next action.", acc.Address.Hex(), times[i])
-		time.Sleep(times[i])
 	}
 
 	return nil
