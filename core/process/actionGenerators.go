@@ -8,39 +8,69 @@ import (
 	"lisk/logger"
 	"lisk/models"
 	"math/big"
+	"math/rand"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 )
 
-var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
-	"Oku":                generateSwap,
-	"Ionic":              generateLiquidity,
-	"IonicWithdraw":      generateIonicWithdraw,
-	"Relay":              generateBridgeToLisk,
-	"Checker":            generateChecker,
-	"Portal_daily_check": generateDailyCheck,
-	"Portal_main_tasks":  generateMainTasks,
+func generateTimeWindow(totalTime, actionCount int) []time.Duration {
+	if actionCount <= 0 {
+		return nil
+	}
+
+	baseInterval := time.Duration(totalTime) * time.Minute / time.Duration(actionCount)
+	const variationFactor = 0.2
+	const minVariation = time.Second
+	const maxVariation = 30 * time.Second
+
+	intervals := make([]time.Duration, 0, actionCount)
+	for i := 0; i < actionCount; i++ {
+		variation := float64(baseInterval) * variationFactor
+
+		if variation < float64(minVariation) {
+			variation = float64(minVariation)
+		} else if variation > float64(maxVariation) {
+			variation = float64(maxVariation)
+		}
+
+		randomVariation := time.Duration(rand.Float64()*2*variation - variation)
+		interval := baseInterval + randomVariation
+
+		if interval < 0 {
+			interval = baseInterval
+		}
+
+		intervals = append(intervals, interval)
+	}
+
+	return intervals
+}
+
+func generateNextAction(acc *account.Account, selectedModule string, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	generator, exists := actionGenerators[selectedModule]
+	if !exists {
+		return ActionProcess{TypeAction: globals.Unknown}, fmt.Errorf("no action generator for module '%s'", selectedModule)
+	}
+
+	return generator(acc, clients)
 }
 
 func generateChecker(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	return ActionProcess{TypeAction: globals.Checker, Module: "Portal"}, nil
+	return packActionProcessStruct(globals.Checker, "Portal", big.NewInt(0), globals.NULL, globals.NULL), nil
 }
+
 func generateDailyCheck(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	return ActionProcess{TypeAction: globals.DailyCheck, Module: "Portal"}, nil
+	return packActionProcessStruct(globals.DailyCheck, "Portal", big.NewInt(0), globals.NULL, globals.NULL), nil
 }
 
 func generateMainTasks(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	return ActionProcess{TypeAction: globals.MainTasks, Module: "Portal"}, nil
+	return packActionProcessStruct(globals.MainTasks, "Portal", big.NewInt(0), globals.NULL, globals.NULL), nil
 }
 
 func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	if len(acc.LastSwaps) > 1 {
-		last := acc.LastSwaps[len(acc.LastSwaps)-1]
-		prev := acc.LastSwaps[len(acc.LastSwaps)-2]
-		if last.TokenFrom == prev.TokenFrom && last.TokenTo == prev.TokenTo {
-			return ActionProcess{TypeAction: globals.Unknown},
-				fmt.Errorf("two identical swaps in a row not allowed")
-		}
+	if err := validateSwapHistory(acc.LastSwaps); err != nil {
+		return ActionProcess{TypeAction: globals.Unknown}, err
 	}
 
 	var tokenFrom common.Address
@@ -55,17 +85,11 @@ func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (A
 		}
 	}
 
-	var tokenTo common.Address
-	const maxAttempts = 5
-	for attempts := 0; attempts < maxAttempts; attempts++ {
-		tokenTo = selectDifferentToken(tokenFrom)
-		if !excludeSwap(tokenFrom, tokenTo) {
-			break
-		}
-		if attempts == maxAttempts-1 {
-			return ActionProcess{TypeAction: globals.Unknown}, fmt.Errorf("failed to select non-excluded token after %d attempts", maxAttempts)
-		}
+	tokenTo, err := selectValidSwapToken(tokenFrom, 5)
+	if err != nil {
+		return ActionProcess{TypeAction: globals.Unknown}, err
 	}
+
 	acc.LastSwaps = append(acc.LastSwaps, models.SwapPair{
 		TokenFrom: tokenFrom,
 		TokenTo:   tokenTo,
@@ -76,102 +100,37 @@ func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (A
 		return ActionProcess{TypeAction: globals.Unknown}, err
 	}
 
-	return ActionProcess{
-		TokenFrom:  tokenFrom,
-		TokenTo:    tokenTo,
-		Amount:     amount,
-		TypeAction: globals.Swap,
-		Module:     "Oku",
-	}, nil
+	return packActionProcessStruct(globals.Swap, "Oku", amount, tokenFrom, tokenTo), nil
 }
 
-func generateLiquidity(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	liqState := acc.LiquidityState
-
-	if liqState.ActionCount == 0 {
-		action := ActionProcess{
-			TokenFrom:  globals.USDT,
-			Amount:     big.NewInt(1e6),
-			TypeAction: globals.Supply,
-			Module:     "Ionic",
+func generate71Borrow(actionType globals.ActionType, token common.Address, amount *big.Int) func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	return func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+		if actionType == globals.Borrow && acc.LiquidityState.ActionCount == 0 {
+			acc.LiquidityState.ActionCount++
+			return packActionProcessStruct(globals.EnterMarket, "Ionic", big.NewInt(0), globals.USDT, globals.NULL), nil
 		}
-		updateLiquidityState(acc, action.TypeAction)
-		return action, nil
-	}
 
-	if liqState.ActionCount == 1 {
-		action := ActionProcess{
-			TypeAction: globals.EnterMarket,
-			Module:     "Ionic",
-		}
-		updateLiquidityState(acc, action.TypeAction)
-		return action, nil
+		acc.LiquidityState.LastAction = actionType
+		return packActionProcessStruct(actionType, "Ionic", amount, token, globals.NULL), nil
 	}
+}
 
-	if liqState.LastAction == globals.Redeem {
-		if !liqState.PendingEnterAfterWithdraw {
-			liqState.PendingEnterAfterWithdraw = true
-			action := ActionProcess{
-				TokenFrom:  globals.USDT,
-				Amount:     big.NewInt(1e5),
-				TypeAction: globals.Supply,
-				Module:     "Ionic",
-			}
-			updateLiquidityState(acc, action.TypeAction)
-			return action, nil
-		}
-	}
-
-	if liqState.LastAction == globals.Borrow {
-		action := ActionProcess{
-			TokenFrom:  globals.LISK,
-			Amount:     big.NewInt(19e16),
-			TypeAction: globals.Repay,
-			Module:     "Ionic",
-		}
-		updateLiquidityState(acc, action.TypeAction)
-		return action, nil
-	}
-
-	if liqState.LastAction == globals.Repay || liqState.LastAction == globals.EnterMarket {
-		action := ActionProcess{
-			TokenFrom:  globals.LISK,
-			Amount:     big.NewInt(2e17),
-			TypeAction: globals.Borrow,
-			Module:     "Ionic",
-		}
-		updateLiquidityState(acc, action.TypeAction)
-		return action, nil
-	}
-
-	return ActionProcess{TypeAction: globals.Unknown}, nil
+func generateIonic71Supply(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	return packActionProcessStruct(globals.Supply, "Ionic", globals.IonicSupply, globals.USDT, globals.NULL), nil
 }
 
 func generateIonicWithdraw(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	if acc.LiquidityState.ActionCount == 0 {
-		actions := ActionProcess{
-			TokenFrom:  globals.USDT,
-			TypeAction: globals.ExitMarket,
-			Module:     "Ionic",
-		}
-
+	switch acc.LiquidityState.LastAction {
+	case globals.Repay:
 		updateLiquidityState(acc, globals.ExitMarket)
-		return actions, nil
-	}
-
-	if acc.LiquidityState.LastAction == globals.ExitMarket {
-		actions := ActionProcess{
-			Amount:     globals.MaxRepayBigInt,
-			TokenFrom:  globals.USDT,
-			TypeAction: globals.Redeem,
-			Module:     "Ionic",
-		}
-
+		return packActionProcessStruct(globals.ExitMarket, "Ionic", big.NewInt(0), globals.USDT, globals.USDT), nil
+	case globals.ExitMarket:
 		updateLiquidityState(acc, globals.Redeem)
-		return actions, nil
+		return packActionProcessStruct(globals.Redeem, "Ionic", globals.MaxRepayBigInt, globals.USDT, globals.USDT), nil
+	default:
+		updateLiquidityState(acc, globals.Repay)
+		return packActionProcessStruct(globals.Repay, "Ionic", globals.MaxRepayBigInt, globals.LISK, globals.LISK), nil
 	}
-
-	return ActionProcess{}, fmt.Errorf("Unknow action")
 }
 
 func generateBridgeToLisk(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
