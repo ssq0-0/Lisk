@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -119,7 +118,11 @@ func (c *Client) GetGasValues(msg ethereum.CallMsg) (uint64, *big.Int, *big.Int,
 		return 0, nil, nil, err
 	}
 
-	maxPriorityFeePerGas := big.NewInt(1e7)
+	maxPriorityFeePerGas, err := c.Client.SuggestGasTipCap(context.Background())
+	if err != nil {
+		return 0, nil, nil, err
+	}
+
 	maxFeePerGas := new(big.Int).Add(header.BaseFee, maxPriorityFeePerGas)
 
 	gasLimit, err := c.Client.EstimateGas(context.Background(), msg)
@@ -256,7 +259,7 @@ func (c *Client) waitForTransactionSuccess(txHash common.Hash, timeout time.Dura
 	for {
 		select {
 		case <-ctx.Done():
-			return errors.New("transaction wait timeout")
+			return fmt.Errorf("transaction wait timeout")
 		case <-ticker.C:
 			receipt, err := c.Client.TransactionReceipt(context.Background(), txHash)
 			if err != nil {
@@ -269,100 +272,10 @@ func (c *Client) waitForTransactionSuccess(txHash common.Hash, timeout time.Dura
 			if receipt.Status == 1 {
 				return nil
 			} else {
-				c.logTransactionError(txHash, receipt)
-				return errors.New("transaction failed")
+				return fmt.Errorf("transaction failed")
 			}
 		}
 	}
-}
-
-func (c *Client) logTransactionError(txHash common.Hash, receipt *types.Receipt) {
-	logger.GlobalLogger.Errorf("Transaction failed. txHash: %s", txHash.Hex())
-
-	for _, logEntry := range receipt.Logs {
-		logger.GlobalLogger.Warnf("Event Log - Address: %s, Data: %x, Topics: %v",
-			logEntry.Address.Hex(),
-			logEntry.Data,
-			logEntry.Topics,
-		)
-	}
-
-	tx, isPending, err := c.Client.TransactionByHash(context.Background(), txHash)
-	if err != nil {
-		logger.GlobalLogger.Warnf("Error getting transaction details: %v", err)
-		return
-	}
-
-	chainID, err := c.Client.NetworkID(context.Background())
-	if err != nil {
-		logger.GlobalLogger.Warnf("Error getting ChainID: %v", err)
-		return
-	}
-
-	from, err := types.Sender(types.LatestSignerForChainID(chainID), tx)
-	if err != nil {
-		logger.GlobalLogger.Warnf("Error getting transaction sender: %v", err)
-		return
-	}
-
-	callMsg := ethereum.CallMsg{
-		From:     from,
-		To:       tx.To(),
-		Gas:      tx.Gas(),
-		GasPrice: tx.GasPrice(),
-		Value:    tx.Value(),
-		Data:     tx.Data(),
-	}
-
-	blockNumber := receipt.BlockNumber
-	result, callErr := c.Client.CallContract(context.Background(), callMsg, blockNumber)
-
-	var revertReason string
-
-	if callErr != nil {
-		if strings.HasPrefix(callErr.Error(), "execution reverted") {
-			revertReason = callErr.Error()
-			if len(result) > 0 {
-				decodedReason, decodeErr := abi.UnpackRevert(result)
-				if decodeErr != nil {
-					logger.GlobalLogger.Warnf("Failed to decode revert reason: %v", decodeErr)
-				} else {
-					revertReason = decodedReason
-				}
-			}
-		} else {
-			logger.GlobalLogger.Warnf("Error simulating transaction execution: %v", callErr)
-		}
-	} else {
-		if len(result) > 0 {
-			decodedReason, decodeErr := abi.UnpackRevert(result)
-			if decodeErr != nil {
-				logger.GlobalLogger.Warnf("Failed to decode revert reason: %v", decodeErr)
-			} else {
-				revertReason = decodedReason
-			}
-		}
-	}
-
-	if revertReason != "" {
-		logger.GlobalLogger.Warnf("Transaction revert reason: %s", revertReason)
-	} else {
-		logger.GlobalLogger.Warnf("Transaction revert reason not found.")
-	}
-
-	logger.GlobalLogger.Warnf("Failed transaction details:")
-	logger.GlobalLogger.Warnf("  From: %s", from.Hex())
-	if tx.To() != nil {
-		logger.GlobalLogger.Warnf("  To: %s", tx.To().Hex())
-	} else {
-		logger.GlobalLogger.Warnf("  To: contract creation (contract transaction)")
-	}
-	logger.GlobalLogger.Warnf("  Value: %s", tx.Value().String())
-	logger.GlobalLogger.Warnf("  Gas Limit: %d", tx.Gas())
-	logger.GlobalLogger.Warnf("  Gas Price: %s", tx.GasPrice().String())
-	logger.GlobalLogger.Warnf("  Nonce: %d", tx.Nonce())
-	logger.GlobalLogger.Warnf("  Data: %x", tx.Data())
-	logger.GlobalLogger.Warnf("  Pending: %v", isPending)
 }
 
 func isUnknownBlockError(err error) bool {
