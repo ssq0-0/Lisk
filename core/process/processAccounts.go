@@ -16,6 +16,17 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
+	"Oku":                generateSwap,
+	"IonicWithdraw":      generateIonicWithdraw,
+	"Ionic71Borrow":      generate71Borrow(globals.Borrow, globals.LISK, globals.IonicBorrow),
+	"Ionic71Supply":      generateIonic71Supply,
+	"Relay":              generateBridgeToLisk,
+	"Checker":            generateChecker,
+	"Portal_daily_check": generateDailyCheck,
+	"Portal_main_tasks":  generateMainTasks,
+}
+
 type ActionProcess struct {
 	TokenFrom  common.Address
 	TokenTo    common.Address
@@ -72,6 +83,10 @@ func ProcessAccounts(accs []*account.Account, selectModule string, mod map[strin
 		return fmt.Errorf("ProcessAccount encountered %d errors", len(errs))
 	}
 
+	if err := WriteWeeklyStats(accs); err != nil {
+		return fmt.Errorf("failed to write weekly stats: %w", err)
+	}
+
 	return nil
 }
 
@@ -81,14 +96,18 @@ func processSingleAccount(ctx context.Context, acc *account.Account, selectModul
 		return fmt.Errorf("account %s: performActions error: %w", acc.Address.Hex(), err)
 	}
 
-	logger.GlobalLogger.Infof("The job is done. Account statistics: wallet: %s Success actions: %d", acc.Address.Hex(), acc.Stats)
+	logger.GlobalLogger.Infof("The %s is done", acc.Address.Hex())
 
 	return nil
 }
 
 func performActions(acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
 	times := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)
-	totalActions := acc.ActionsCount
+
+	totalActions, exists := globals.LimitedModules[selectModule]
+	if !exists {
+		totalActions = acc.ActionsCount
+	}
 
 	for i := 0; i < totalActions; i++ {
 
@@ -120,11 +139,7 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 			continue
 		}
 
-		acc.Stats += 1
-
-		if i+1 == globals.LimitedModules[selectModule] {
-			break
-		}
+		acc.Stats[selectModule] += 1
 
 		logger.GlobalLogger.Infof("The action for account %v has been completed. Sleep %v before the next action.", acc.Address.Hex(), times[i])
 		time.Sleep(times[i])
