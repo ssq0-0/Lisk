@@ -8,6 +8,7 @@ import (
 	"lisk/models"
 	"math/big"
 	"math/rand"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -48,17 +49,19 @@ func validateSwapHistory(lastSwaps []models.SwapPair) error {
 	return nil
 }
 
-func selectValidSwapToken(tokenFrom common.Address, maxAttempts int) (common.Address, error) {
-	for attempts := 0; attempts < maxAttempts; attempts++ {
-		tokenTo := selectDifferentToken(tokenFrom)
-		if !excludeSwap(tokenFrom, tokenTo) {
-			return tokenTo, nil
-		}
+func selectTokenFrom(acc *account.Account) common.Address {
+	if len(acc.LastSwaps) == 0 {
+		return globals.WETH
 	}
-	return common.Address{}, fmt.Errorf("не удалось выбрать допустимый токен для свопа после %d попыток", maxAttempts)
+
+	lastTokenTo := acc.LastSwaps[len(acc.LastSwaps)-1].TokenTo
+	if lastTokenTo != globals.LISK {
+		return lastTokenTo
+	}
+	return globals.WETH
 }
 
-func selectDifferentToken(tokenFrom common.Address) common.Address {
+func selectDifferentToken(token common.Address) common.Address {
 	tokens := []common.Address{
 		globals.LISK,
 		globals.USDT,
@@ -68,7 +71,7 @@ func selectDifferentToken(tokenFrom common.Address) common.Address {
 
 	for attempts := 0; attempts < 10; attempts++ {
 		t := tokens[rand.Intn(len(tokens))]
-		if t != tokenFrom {
+		if t != token && !excludeSwap(token, t) {
 			return t
 		}
 	}
@@ -114,18 +117,11 @@ func canDoActionByBalance(token common.Address, acc *account.Account, client *et
 }
 
 func checkMinimalAmount(balance *big.Int, token common.Address) bool {
-	return balance.Cmp(globals.MinBalances[token]) >= 0
-}
-
-func calculateAmount(amount *big.Int, percent int) (*big.Int, error) {
-	percentAmount := new(big.Int).Mul(amount, big.NewInt(int64(percent)))
-	percentAmount.Div(percentAmount, big.NewInt(100))
-	return percentAmount, nil
-}
-
-func updateLiquidityState(acc *account.Account, actionType globals.ActionType) {
-	acc.LiquidityState.LastAction = actionType
-	acc.LiquidityState.ActionCount++
+	minBalance, exists := globals.MinBalances[token]
+	if !exists {
+		return false
+	}
+	return balance.Cmp(minBalance) >= 0
 }
 
 func packActionProcessStruct(typeAction globals.ActionType, module string, amount *big.Int, tokenFrom, tokenTo common.Address) ActionProcess {
@@ -136,4 +132,29 @@ func packActionProcessStruct(typeAction globals.ActionType, module string, amoun
 		TokenFrom:  tokenFrom,
 		TokenTo:    tokenTo,
 	}
+}
+
+func calculateAmount(amount *big.Int, percent int) (*big.Int, error) {
+	percentAmount := new(big.Int).Mul(amount, big.NewInt(int64(percent)))
+	percentAmount.Div(percentAmount, big.NewInt(100))
+	return percentAmount, nil
+}
+
+func isInsufficientBalanceError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "balance too low")
+}
+
+func updateSwapHistory(acc *account.Account, tokenFrom, tokenTo common.Address) {
+	acc.LastSwaps = append(acc.LastSwaps, models.SwapPair{
+		TokenFrom: tokenFrom,
+		TokenTo:   tokenTo,
+	})
+}
+
+func updateLiquidityState(acc *account.Account, actionType globals.ActionType) {
+	acc.LiquidityState.LastAction = actionType
+	acc.LiquidityState.ActionCount++
 }

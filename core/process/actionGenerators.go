@@ -6,7 +6,6 @@ import (
 	"lisk/ethClient"
 	"lisk/globals"
 	"lisk/logger"
-	"lisk/models"
 	"math/big"
 	"math/rand"
 	"time"
@@ -80,38 +79,36 @@ func generateMainTasks(acc *account.Account, clients map[string]*ethClient.Clien
 }
 
 func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	if err := validateSwapHistory(acc.LastSwaps); err != nil {
-		return ActionProcess{TypeAction: globals.Unknown}, err
-	}
-
-	var tokenFrom common.Address
-	if len(acc.LastSwaps) == 0 {
-		tokenFrom = globals.WETH
-	} else {
-		lastTokenTo := acc.LastSwaps[len(acc.LastSwaps)-1].TokenTo
-		if lastTokenTo != globals.LISK {
-			tokenFrom = lastTokenTo
-		} else {
-			tokenFrom = globals.WETH
+	for attemps := 0; attemps < 5; attemps++ {
+		if err := validateSwapHistory(acc.LastSwaps); err != nil {
+			return ActionProcess{TypeAction: globals.Unknown}, err
 		}
+
+		tokenFrom := selectTokenFrom(acc)
+		tokenTo := selectDifferentToken(tokenFrom)
+
+		ethBal, err := clients["lisk"].BalanceCheck(acc.Address, globals.WETH)
+		if err != nil {
+			return ActionProcess{TypeAction: globals.Unknown}, err
+		}
+
+		if ethBal.Cmp(globals.MinBalances[globals.WETH]) < 0 {
+			tokenTo = globals.WETH
+			for attemps := 0; attemps < 5; attemps++ {
+				tokenFrom = selectDifferentToken(tokenTo)
+			}
+		}
+
+		amount, err := canDoActionByBalance(tokenFrom, acc, clients["lisk"])
+		if err != nil {
+			return ActionProcess{TypeAction: globals.Unknown}, err
+		}
+
+		updateSwapHistory(acc, tokenFrom, tokenTo)
+		return packActionProcessStruct(globals.Swap, "Oku", amount, tokenFrom, tokenTo), nil
 	}
 
-	tokenTo, err := selectValidSwapToken(tokenFrom, 5)
-	if err != nil {
-		return ActionProcess{TypeAction: globals.Unknown}, err
-	}
-
-	acc.LastSwaps = append(acc.LastSwaps, models.SwapPair{
-		TokenFrom: tokenFrom,
-		TokenTo:   tokenTo,
-	})
-
-	amount, err := canDoActionByBalance(tokenFrom, acc, clients["lisk"])
-	if err != nil {
-		return ActionProcess{TypeAction: globals.Unknown}, err
-	}
-
-	return packActionProcessStruct(globals.Swap, "Oku", amount, tokenFrom, tokenTo), nil
+	return ActionProcess{TypeAction: globals.Unknown}, fmt.Errorf("failed to generate swap after 5 attempts")
 }
 
 func generate15Borrow(actionType globals.ActionType, token common.Address, amount *big.Int) func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {

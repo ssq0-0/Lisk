@@ -81,11 +81,11 @@ func ProcessAccounts(accs []*account.Account, selectModule string, mod map[strin
 
 func processSingleAccount(ctx context.Context, acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
 	if err := performActions(acc, selectModule, mod, clients); err != nil {
-		logger.GlobalLogger.Errorf("failed to perform actions for account %s: %v", acc.Address.Hex(), err)
-		return fmt.Errorf("account %s: performActions error: %w", acc.Address.Hex(), err)
+		logger.GlobalLogger.Errorf("[%v] failed to perform actions: %v", acc.Address.Hex(), err)
+		return fmt.Errorf("[%v] performActions error: %w", acc.Address.Hex(), err)
 	}
 
-	logger.GlobalLogger.Infof("The %s is done", acc.Address.Hex())
+	logger.GlobalLogger.Infof("[%v] Processing is done", acc.Address.Hex())
 
 	return nil
 }
@@ -105,7 +105,11 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 
 		action, err := generateNextAction(acc, selectModule, clients)
 		if err != nil {
-			logger.GlobalLogger.Warnf("Cannot generate action: %v", err)
+			if isInsufficientBalanceError(err) {
+				logger.GlobalLogger.Warnf("[%v] Insufficient balance for swap. Stop trying.", acc.Address.Hex())
+				return err
+			}
+			logger.GlobalLogger.Warnf("[%v] Cannot generate action: %v", acc.Address, err)
 			continue
 		}
 
@@ -114,18 +118,23 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 		for {
 			moduleFasad, exists := mod[action.Module]
 			if !exists || moduleFasad == nil {
-				logger.GlobalLogger.Warnf("Module '%s' not found. Skipping action.", action.Module)
+				logger.GlobalLogger.Warnf("[%v] Module '%s' not found. Skipping action for %s.", acc.Address, action.Module, acc.Address)
 				break actionLoop
 			}
 
 			if err := moduleFasad.Action(action.TokenFrom, action.TokenTo, action.Amount, acc, action.TypeAction); err != nil {
+				if isInsufficientBalanceError(err) {
+					logger.GlobalLogger.Warnf("[%v] Insufficient balance for swap. Stop trying.", acc.Address.Hex())
+					return err
+				}
+
 				retryCount++
 				if retryCount <= maxRetriesPerAction {
-					logger.GlobalLogger.Warnf("Action failed: %v. Retry %d of %d...", err, retryCount, maxRetriesPerAction)
+					logger.GlobalLogger.Warnf("[%v] Action failed for: %v. Retry %d of %d...", acc.Address, err, retryCount, maxRetriesPerAction)
 					time.Sleep(5 * time.Second)
 					continue
 				} else {
-					logger.GlobalLogger.Errorf("Action failed after %d retries. Skip action.", maxRetriesPerAction)
+					logger.GlobalLogger.Errorf("[%v] Action failed after %d retries. Skip action.", acc.Address, maxRetriesPerAction)
 					break actionLoop
 				}
 			}
@@ -133,7 +142,7 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 			acc.Stats[selectModule]++
 			successfulActions++
 
-			logger.GlobalLogger.Infof("Action for account %v has been completed. Sleep %v", acc.Address.Hex(), sleepDuration)
+			logger.GlobalLogger.Infof("[%v] Action has been completed. Sleep %v", acc.Address.Hex(), sleepDuration)
 			time.Sleep(sleepDuration)
 
 			break actionLoop
