@@ -61,12 +61,15 @@ This section defines the proxy used by the program. Each proxy is described by t
 
 - **`http://user:pass@ip:port`**:
 ---
+### Config (`config.json`)
+
+Setup your config
+---
 
 ### Modules (`modules`)
 
 - Oku. Dex swaps.
-- Ionic. Supply and cycle repay + borrow.
-- IonicWithdraw. Withdraw all balance. You must repay all funds before this module if there have been loans.
+- Ionic. Supply, repay + withdraw, borrow.
 - Relay. Bridge from other L2 chains to LISK.
 - Top Checker.
 - Task Performer.
