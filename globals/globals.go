@@ -25,7 +25,7 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.2.5"
+	SoftVersion  = "v2.2.6"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -73,10 +73,10 @@ var (
 	}
 
 	MinBalances = map[common.Address]*big.Int{
-		WETH: big.NewInt(1e14),
-		USDT: big.NewInt(1e5),
-		USDC: big.NewInt(1e5),
-		LISK: big.NewInt(1e18),
+		WETH: big.NewInt(1e14), // 0.00001
+		USDT: big.NewInt(1e5),  // 0.1
+		USDC: big.NewInt(1e5),  // 0.1
+		LISK: big.NewInt(1e17), // 0.1
 	}
 
 	LimitedModules = map[string]int{
