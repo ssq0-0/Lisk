@@ -71,6 +71,12 @@ For example you have chosen 5 actions and 10 minutes => actions will be repeated
 - In this file, you can configure the start date of the software to track progress in a specified format in the comments
 - You can change the values of Borrow & Supply. The format is specified in the comments
 
+3. Balance
+It is important to note that the minimum balances to work with the software: 
+- +- 0.35$ in ETH
+- 0.1 USDT/USDC
+
+**If the balance is insufficient for the commission, any token (usdt/usdc) will be automatically exchanged to ETH. Works only in case of exchanges on oku**
 ---
 
 ### Modules (`modules`)
