@@ -25,12 +25,13 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.2.6"
+	SoftVersion  = "v2.2.7"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
 	TodaySuccess = 1
 	ConsoleTitle = "Lisk | cheif.ssq"
+	Blockscout   = "https://blockscout.lisk.com/api/v2/stats"
 )
 
 var (
@@ -85,7 +86,7 @@ var (
 		"Portal_daily_check": 1,
 		"Portal_main_tasks":  1,
 		"Checker":            1,
-		"IonicWithdraw":      2,
+		"IonicWithdraw":      3,
 		"Ionic71Supply":      72,
 		"Ionic71Borrow":      15,
 	}
