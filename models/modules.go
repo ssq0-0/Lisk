@@ -89,3 +89,11 @@ type StatRecord struct {
 	TodayDate    int // YYYYMMDD
 	TodaySuccess int
 }
+
+type BlockscoutResp struct {
+	GasPrice struct {
+		Slow    float64 `json:"slow"`
+		Average float64 `json:"average"`
+		Fast    float64 `json:"fast"`
+	} `json:"gas_prices"`
+}

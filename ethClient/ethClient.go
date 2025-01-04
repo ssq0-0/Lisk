@@ -76,14 +76,6 @@ func CloseAllClients(clients map[string]*Client) {
 	}
 }
 
-func (c *Client) PrintGasInStart() {
-	gas, err := c.Client.SuggestGasPrice(context.Background())
-	if err != nil {
-		return
-	}
-
-	logger.GlobalLogger.Infof("gas: %v", gas)
-}
 func (c *Client) BalanceCheck(owner, tokenAddr common.Address) (*big.Int, error) {
 	if IsNativeToken(tokenAddr) {
 		balance, err := c.Client.BalanceAt(context.Background(), owner, nil)
