@@ -15,7 +15,7 @@ import (
 func main() {
 	_ = utils.SetConsoleTitle(globals.ConsoleTitle)
 	utils.PrintStartMessage()
-
+	utils.GasPricesPrint()
 	if err := utils.CheckVersion(); err != nil {
 		logger.GlobalLogger.Warn(err)
 	}
@@ -38,8 +38,6 @@ func main() {
 		return
 	}
 	defer ethClient.CloseAllClients(clients)
-
-	clients["lisk"].PrintGasInStart()
 
 	abis, err := utils.ReadAbis(cfg.ABIs)
 	if err != nil {
@@ -77,4 +75,5 @@ func main() {
 		return
 	}
 	fmt.Println("Account processed successfully")
+	utils.PrintStartMessage()
 }
