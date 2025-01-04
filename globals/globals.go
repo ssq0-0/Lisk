@@ -40,11 +40,13 @@ var (
 	// Otherwise: 2025.01.01 00:00:00
 	StartDate = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
+	// LISK have 18 decimals => 18 '0' after ' , '
+	// You can write 1e18 (1 LISK) or 1e17(0.1 LISK). Example 0.15LISK = 15e16. (15 + 16 zero)
+	IonicBorrow = big.NewInt(15_000_000_000_000_000_0) // 0,15 LISK
+
 	// USDT/USDC have 6 decimal => 6 '0' after ' , '
 	// Example 1 USDC => 1_000_000.
 	// Example 1.1 USDC => 11_000_00
-	IonicBorrow = big.NewInt(15_000_0) // 0,15 USDC
-
 	// For a successful supply/borrow/return cycle, you need to make supply at least 66% more than you want to reciprocate.
 	IonicSupply = big.NewInt(33_000_0) // 0,33 USDT
 

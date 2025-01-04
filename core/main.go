@@ -25,14 +25,12 @@ func main() {
 		logger.GlobalLogger.Error(err)
 		return
 	}
-	logger.GlobalLogger.Infof("Private keys have been initialised!")
 
 	cfg, err := utils.GetConfig()
 	if err != nil {
 		logger.GlobalLogger.Error(err)
 		return
 	}
-	logger.GlobalLogger.Infof("Config have been initialised!")
 
 	clients, err := ethClient.EthClientFactory(cfg.RPC)
 	if err != nil {
@@ -40,14 +38,14 @@ func main() {
 		return
 	}
 	defer ethClient.CloseAllClients(clients)
-	logger.GlobalLogger.Infof("Ethereum clients have been initialised!")
+
+	clients["lisk"].PrintGasInStart()
 
 	abis, err := utils.ReadAbis(cfg.ABIs)
 	if err != nil {
 		logger.GlobalLogger.Error(err)
 		return
 	}
-	logger.GlobalLogger.Infof("ABI's have been initialised!")
 
 	selectModule := utils.UserChoice()
 	if selectModule == "" || selectModule == "Exit" {
@@ -60,7 +58,6 @@ func main() {
 		logger.GlobalLogger.Error(err)
 		return
 	}
-	logger.GlobalLogger.Infof("Modules have been initialised!")
 
 	proxies, err := utils.GetProxies()
 	if err != nil {
