@@ -113,24 +113,45 @@ func (c *Client) CallCA(toCA common.Address, data []byte) ([]byte, error) {
 }
 
 func (c *Client) GetGasValues(msg ethereum.CallMsg) (uint64, *big.Int, *big.Int, error) {
-	header, err := c.Client.HeaderByNumber(context.Background(), nil)
-	if err != nil {
-		return 0, nil, nil, err
+	timeout := time.After(time.Duration(globals.MaxAttentionTime) * time.Minute)
+	ticker := time.NewTicker(time.Second * time.Duration(globals.AttentionTime))
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout:
+			logger.GlobalLogger.Errorf("Gas wait timeout has been exceeded. Cycle interrupted.")
+			return 0, big.NewInt(0), big.NewInt(0), fmt.Errorf("Gas wait timeout has been exceeded. Cycle interrupted.")
+
+		case <-ticker.C:
+			header, err := c.Client.HeaderByNumber(context.Background(), nil)
+			if err != nil {
+				logger.GlobalLogger.Errorf("Ошибка получения заголовка блока: %v", err)
+				return 0, nil, nil, fmt.Errorf("Ошибка получения заголовка блока: %w", err)
+			}
+
+			maxPriorityFeePerGas, err := c.Client.SuggestGasTipCap(context.Background())
+			if err != nil {
+				logger.GlobalLogger.Errorf("Ошибка получения предложения Gas Tip Cap: %v", err)
+				return 0, nil, nil, fmt.Errorf("Ошибка получения предложения Gas Tip Cap: %w", err)
+			}
+
+			maxFeePerGas := new(big.Int).Add(header.BaseFee, maxPriorityFeePerGas)
+
+			gasLimit, err := c.Client.EstimateGas(context.Background(), msg)
+			if err != nil {
+				logger.GlobalLogger.Errorf("Ошибка оценки газа: %v", err)
+				return 0, nil, nil, fmt.Errorf("Ошибка оценки газа: %w", err)
+			}
+
+			if maxFeePerGas.Cmp(globals.AttentionGwei) > 0 {
+				logger.GlobalLogger.Warnf("[ATTENTION] High gwei %v", maxFeePerGas)
+				continue
+			} else {
+				return gasLimit, maxPriorityFeePerGas, maxFeePerGas, nil
+			}
+		}
 	}
-
-	maxPriorityFeePerGas, err := c.Client.SuggestGasTipCap(context.Background())
-	if err != nil {
-		return 0, nil, nil, err
-	}
-
-	maxFeePerGas := new(big.Int).Add(header.BaseFee, maxPriorityFeePerGas)
-
-	gasLimit, err := c.Client.EstimateGas(context.Background(), msg)
-	if err != nil {
-		return 0, nil, nil, err
-	}
-
-	return gasLimit, maxPriorityFeePerGas, maxFeePerGas, nil
 }
 
 func (c *Client) GetNonce(address common.Address) uint64 {
