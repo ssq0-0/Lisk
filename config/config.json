@@ -15,8 +15,8 @@
     "ionic_borrow_amount":"0.15",
     "ionic_supply_amount":"0.09",
     "attention_gwei":"0.03",
-    "attention_time_cycle":60,
-    "max_attentionn_time":60,
+    "attention_time_cycle":10,
+    "max_attention_time":60,
     "state_file":"account/state.json",
     "oku_addresses":{
         "swap_router":"0x447B8E40B0CdA8e55F405C86bC635D02d0540aB8",

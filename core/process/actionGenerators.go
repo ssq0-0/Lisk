@@ -138,7 +138,7 @@ func generateIonicWithdraw(acc *account.Account, clients map[string]*ethClient.C
 		updateLiquidityState(acc, globals.Redeem)
 		return packActionProcessStruct(globals.Redeem, "Ionic", globals.MaxRepayBigInt, globals.USDT, globals.NULL), nil
 	default:
-		updateLiquidityState(acc, globals.Repay)
+		updateLiquidityState(acc, globals.ExitMarket)
 		return packActionProcessStruct(globals.ExitMarket, "Ionic", globals.MaxRepayBigInt, globals.USDT, globals.NULL), nil
 	}
 }
