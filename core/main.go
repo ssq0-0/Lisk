@@ -14,6 +14,7 @@ import (
 
 func main() {
 	_ = utils.SetConsoleTitle(globals.ConsoleTitle)
+
 	utils.PrintStartMessage()
 	utils.GasPricesPrint()
 	if err := utils.CheckVersion(); err != nil {
@@ -32,6 +33,8 @@ func main() {
 		return
 	}
 
+	process.InitGlobals(cfg)
+
 	clients, err := ethClient.EthClientFactory(cfg.RPC)
 	if err != nil {
 		logger.GlobalLogger.Error(err)
@@ -45,9 +48,15 @@ func main() {
 		return
 	}
 
-	selectModule := utils.UserChoice()
-	if selectModule == "" || selectModule == "Exit" {
-		logger.GlobalLogger.Infof("No module selected or an error occurred. Exiting.")
+	memory, err := process.NewMemory(cfg.StateFile)
+	if err != nil {
+		logger.GlobalLogger.Warn(err)
+		return
+	}
+
+	selectModule, err := determineModuleForRun(memory)
+	if err != nil {
+		logger.GlobalLogger.Error(err)
 		return
 	}
 
@@ -70,10 +79,40 @@ func main() {
 	logger.GlobalLogger.Infof("All settings are initialised! Sleep 5 seconds...")
 	time.Sleep(time.Second * 5)
 
-	if err := process.ProcessAccounts(accs, selectModule, mods, clients); err != nil {
+	if err := process.ProcessAccounts(accs, selectModule, mods, clients, memory); err != nil {
 		logger.GlobalLogger.Error(err)
 		return
 	}
-	fmt.Println("Account processed successfully")
+	logger.GlobalLogger.Infof("Account processed successfully")
 	utils.PrintStartMessage()
+}
+
+func determineModuleForRun(memory *process.Memory) (string, error) {
+	hasSavedState, err := memory.IsStateFileNotEmpty()
+	if err != nil {
+		return "", fmt.Errorf("failed to check state file: %w", err)
+	}
+
+	if hasSavedState {
+		answr := utils.ResotoreProcess()
+		if answr == "Yes" {
+			return "", nil
+		} else {
+			if err := memory.ClearAllStates(); err != nil {
+				return "", fmt.Errorf("failed to clear state file: %w", err)
+			}
+
+			selectModule := utils.UserChoice()
+			if selectModule == "" || selectModule == "Exit" {
+				return "", fmt.Errorf("No module selected. Exiting.")
+			}
+			return selectModule, nil
+		}
+	}
+
+	selectModule := utils.UserChoice()
+	if selectModule == "" || selectModule == "Exit" {
+		return "", fmt.Errorf("No module selected. Exiting.")
+	}
+	return selectModule, nil
 }

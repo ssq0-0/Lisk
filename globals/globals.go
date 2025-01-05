@@ -25,7 +25,7 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.2.7"
+	SoftVersion  = "v2.3.8"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -39,17 +39,25 @@ var (
 	// Date format: time.Time
 	// Example: 1 January 2025, time 00:00:00 UTC
 	// Otherwise: 2025.01.01 00:00:00
-	StartDate = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	StartDate time.Time
 
 	// LISK have 18 decimals => 18 '0' after ' , '
 	// You can write 1e18 (1 LISK) or 1e17(0.1 LISK). Example 0.15LISK = 15e16. (15 + 16 zero)
-	IonicBorrow = big.NewInt(15_000_000_000_000_000_0) // 0,15 LISK
+	// min amount for borrow +-0.13 LISK. You can change this, but keep in mind the minimum amount
+	IonicBorrow *big.Int
 
 	// USDT/USDC have 6 decimal => 6 '0' after ' , '
 	// Example 1 USDC => 1_000_000.
 	// Example 1.1 USDC => 11_000_00
 	// For a successful supply/borrow/return cycle, you need to make supply at least 66% more than you want to reciprocate.
-	IonicSupply = big.NewInt(33_000_0) // 0,33 USDT
+	IonicSupply *big.Int // 0,09 USDT
+
+	// Need for gas in tx. If ETH < MinETHForTx - the execution of the count will end as a whole
+	MinETHForTx = big.NewInt(1e13) // 0.00001.
+
+	AttentionGwei    *big.Int // GWEI have 9 decimals
+	AttentionTime    int      // Time in seconds that indicates how often to check the throttle reduction
+	MaxAttentionTime int      //Time in minutes how long the waiting cycle will last at most, after which the execution will continue
 
 	Slippage              = big.NewFloat(0.01) // 1%
 	DefaultDeadlineOffset = 120                // 2 minutes
@@ -86,9 +94,11 @@ var (
 		"Portal_daily_check": 1,
 		"Portal_main_tasks":  1,
 		"Checker":            1,
-		"IonicWithdraw":      3,
+		"Relay":              1,
+		"IonicRepayAll":      1,
+		"IonicWithdrawAll":   2,
 		"Ionic71Supply":      72,
-		"Ionic71Borrow":      15,
+		"Ionic15Borrow":      15,
 	}
 )
 
@@ -178,6 +188,7 @@ var (
 ]`)
 )
 
+// List of random headers and user agents to form a plausible http source request
 var (
 	SecChUa = map[string]string{
 		"Macintosh": `Not)A;Brand";v="99", "Google Chrome";v="120", "Chromium";v="120"`,

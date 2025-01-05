@@ -6,12 +6,29 @@ import (
 	"lisk/ethClient"
 	"lisk/globals"
 	"lisk/models"
+	"lisk/modules"
 	"math/big"
 	"math/rand"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 )
+
+func validateInputData(accs []*account.Account, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
+	if len(accs) == 0 || len(mod) == 0 || len(clients) == 0 {
+		return fmt.Errorf("One of the elements is missing(accounts, modules, eth clients). Check the settings.")
+	}
+	return nil
+}
+
+func determineActionCount(acc *account.Account, selectModule string) int {
+	totalActions, exists := globals.LimitedModules[selectModule]
+	if !exists {
+		totalActions = acc.ActionsCount
+	}
+
+	return totalActions
+}
 
 func getMaxBalance(acc *account.Account, clients map[string]*ethClient.Client) (string, *big.Int, error) {
 	var (
@@ -140,13 +157,6 @@ func calculateAmount(amount *big.Int, percent int) (*big.Int, error) {
 	return percentAmount, nil
 }
 
-func isInsufficientBalanceError(err error) bool {
-	if err == nil {
-		return false
-	}
-	return strings.Contains(err.Error(), "balance too low")
-}
-
 func updateSwapHistory(acc *account.Account, tokenFrom, tokenTo common.Address) {
 	acc.LastSwaps = append(acc.LastSwaps, models.SwapPair{
 		TokenFrom: tokenFrom,
@@ -157,4 +167,35 @@ func updateSwapHistory(acc *account.Account, tokenFrom, tokenTo common.Address) 
 func updateLiquidityState(acc *account.Account, actionType globals.ActionType) {
 	acc.LiquidityState.LastAction = actionType
 	acc.LiquidityState.ActionCount++
+}
+
+func validateNativeBalance(addr common.Address, client *ethClient.Client) (*big.Int, error) {
+	balance, err := client.BalanceCheck(addr, globals.WETH)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+
+	if balance.Cmp(globals.MinETHForTx) < 0 {
+		return balance, fmt.Errorf("Native(ETH) balance too low")
+	}
+
+	return balance, nil
+}
+
+func isCriticalError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+	errorSubstrings := []string{
+		"balance too low",
+		"Gas wait timeout has been exceeded",
+	}
+
+	for _, substr := range errorSubstrings {
+		if strings.Contains(errMsg, substr) {
+			return true
+		}
+	}
+	return false
 }

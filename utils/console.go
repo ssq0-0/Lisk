@@ -42,7 +42,8 @@ func UserChoice() string {
 		"Ionic": {
 			"1. Ionic71Supply",
 			"2. Ionic15Borrow",
-			"3. IonicWithdraw",
+			"3. IonicWithdrawAll",
+			"4. IonicRepayAll",
 			"0. Back",
 		},
 		"Portal": {
@@ -72,6 +73,22 @@ func UserChoice() string {
 		default:
 			logger.GlobalLogger.Warnf("Invalid selection: %s", selected)
 		}
+	}
+}
+
+func ResotoreProcess() string {
+	questions := []string{
+		"0. Yes",
+		"1. No",
+	}
+
+	var rgx = regexp.MustCompile(`^\d+\.\s*`)
+
+	for {
+		selected := promptSelection("A past state file has been detected. Do you want to pick up where you left off?(If no, the state will be reset)", questions)
+		selected = rgx.ReplaceAllString(selected, "")
+
+		return selected
 	}
 }
 
