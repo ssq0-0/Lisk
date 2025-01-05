@@ -24,9 +24,9 @@ type ActionProcess struct {
 	Module     string
 }
 
-func ProcessAccounts(accs []*account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
-	if len(accs) == 0 || len(mod) == 0 || len(clients) == 0 {
-		return fmt.Errorf("One of the elements is missing(accounts, modules, eth clients). Check the settings.")
+func ProcessAccounts(accs []*account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client, memory *Memory) error {
+	if err := validateInputData(accs, mod, clients); err != nil {
+		return err
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -38,12 +38,12 @@ func ProcessAccounts(accs []*account.Account, selectModule string, mod map[strin
 	semaphore := make(chan struct{}, maxConcurrency)
 
 	var (
-		mu   sync.Mutex
-		errs []error
+		mu       sync.Mutex
+		nonFatal []error
 	)
 
 	for _, acc := range accs {
-		acc := acc
+		currentAcc := acc
 
 		g.Go(func() error {
 			semaphore <- struct{}{}
@@ -53,9 +53,9 @@ func ProcessAccounts(accs []*account.Account, selectModule string, mod map[strin
 				return ctx.Err()
 			}
 
-			if err := processSingleAccount(ctx, acc, selectModule, mod, clients); err != nil {
+			if err := processSingleAccount(ctx, currentAcc, selectModule, mod, clients, memory); err != nil {
 				mu.Lock()
-				errs = append(errs, err)
+				nonFatal = append(nonFatal, err)
 				mu.Unlock()
 			}
 
@@ -68,8 +68,8 @@ func ProcessAccounts(accs []*account.Account, selectModule string, mod map[strin
 		return fmt.Errorf("ProcessAccount interrupted: %w", err)
 	}
 
-	if len(errs) > 0 {
-		return fmt.Errorf("ProcessAccount encountered %d errors", len(errs))
+	if len(nonFatal) > 0 {
+		return fmt.Errorf("ProcessAccount encountered %d errors", len(nonFatal))
 	}
 
 	if err := WriteWeeklyStats(accs); err != nil {
@@ -79,8 +79,8 @@ func ProcessAccounts(accs []*account.Account, selectModule string, mod map[strin
 	return nil
 }
 
-func processSingleAccount(ctx context.Context, acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
-	if err := performActions(acc, selectModule, mod, clients); err != nil {
+func processSingleAccount(ctx context.Context, acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client, memory *Memory) error {
+	if err := performActions(acc, selectModule, mod, clients, memory); err != nil {
 		logger.GlobalLogger.Errorf("[%v] failed to perform actions: %v", acc.Address.Hex(), err)
 		return fmt.Errorf("[%v] performActions error: %w", acc.Address.Hex(), err)
 	}
@@ -90,22 +90,35 @@ func processSingleAccount(ctx context.Context, acc *account.Account, selectModul
 	return nil
 }
 
-func performActions(acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client) error {
-	totalActions, exists := globals.LimitedModules[selectModule]
-	if !exists {
-		totalActions = acc.ActionsCount
+func performActions(acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client, memory *Memory) error {
+	if _, err := validateNativeBalance(acc.Address, clients["lisk"]); err != nil {
+		if isCriticalError(err) && (selectModule != "Checker" && selectModule != "Portal_daily_check" && selectModule != "Portal_main_tasks") {
+			logger.GlobalLogger.Warnf("[%v] Insufficient ETH  balance. Stop trying.", acc.Address.Hex())
+			return err
+		}
+	}
+
+	state, err := memory.LoadState(acc.Address.Hex())
+	if err != nil {
+		return fmt.Errorf("failed to load state for account %s: %v", acc.Address.Hex(), err)
 	}
 
 	const maxRetriesPerAction = 3
-
 	var successfulActions int
+	if state != nil {
+		successfulActions = state.LastActionIndex
+		selectModule = state.Module
+		logger.GlobalLogger.Infof("[%s] Resuming from action index %d", acc.Address.Hex(), successfulActions)
+	}
+
+	totalActions := determineActionCount(acc, selectModule)
 
 	for successfulActions < totalActions {
-		sleepDuration := generateTimeWindow(acc.ActionsTime, acc.ActionsCount)[0]
+		sleepDuration := generateTimeWindow(acc.ActionsTime, totalActions)[0]
 
 		action, err := generateNextAction(acc, selectModule, clients)
 		if err != nil {
-			if isInsufficientBalanceError(err) {
+			if isCriticalError(err) {
 				logger.GlobalLogger.Warnf("[%v] Insufficient balance for swap. Stop trying.", acc.Address.Hex())
 				return err
 			}
@@ -123,7 +136,7 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 			}
 
 			if err := moduleFasad.Action(action.TokenFrom, action.TokenTo, action.Amount, acc, action.TypeAction); err != nil {
-				if isInsufficientBalanceError(err) {
+				if isCriticalError(err) {
 					logger.GlobalLogger.Warnf("[%v] Insufficient balance for swap. Stop trying.", acc.Address.Hex())
 					return err
 				}
@@ -139,6 +152,9 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 				}
 			}
 
+			if err := memory.UpdateState(acc.Address.Hex(), selectModule, successfulActions+1); err != nil {
+				logger.GlobalLogger.Warnf("[%s] Failed to update state: %v", acc.Address.Hex(), err)
+			}
 			acc.Stats[selectModule]++
 			successfulActions++
 
@@ -149,5 +165,11 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 		}
 	}
 
+	if successfulActions == totalActions {
+		if err := memory.ClearState(acc.Address.Hex()); err != nil {
+			logger.GlobalLogger.Warnf("[%s] Failed to clear state: %v", acc.Address.Hex(), err)
+		}
+		logger.GlobalLogger.Infof("[%s] All actions completed. State cleared.", acc.Address.Hex())
+	}
 	return nil
 }

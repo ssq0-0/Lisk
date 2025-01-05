@@ -15,7 +15,8 @@ import (
 
 var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
 	"Oku":                generateSwap,
-	"IonicWithdraw":      generateIonicWithdraw,
+	"IonicWithdrawAll":   generateIonicWithdraw,
+	"IonicRepayAll":      generateIonicRepay,
 	"Ionic15Borrow":      generate15Borrow(globals.Borrow, globals.LISK, globals.IonicBorrow),
 	"Ionic71Supply":      generateIonic71Supply,
 	"Relay":              generateBridgeToLisk,
@@ -87,7 +88,7 @@ func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (A
 		tokenFrom := selectTokenFrom(acc)
 		tokenTo := selectDifferentToken(tokenFrom)
 
-		ethBal, err := clients["lisk"].BalanceCheck(acc.Address, globals.WETH)
+		ethBal, err := validateNativeBalance(acc.Address, clients["lisk"])
 		if err != nil {
 			return ActionProcess{TypeAction: globals.Unknown}, err
 		}
@@ -127,17 +128,18 @@ func generateIonic71Supply(acc *account.Account, clients map[string]*ethClient.C
 	return packActionProcessStruct(globals.Supply, "Ionic", globals.IonicSupply, globals.USDT, globals.NULL), nil
 }
 
+func generateIonicRepay(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	return packActionProcessStruct(globals.Repay, "Ionic", globals.MaxRepayBigInt, globals.LISK, globals.NULL), nil
+}
+
 func generateIonicWithdraw(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
 	switch acc.LiquidityState.LastAction {
-	case globals.Repay:
-		updateLiquidityState(acc, globals.ExitMarket)
-		return packActionProcessStruct(globals.ExitMarket, "Ionic", big.NewInt(0), globals.USDT, globals.USDT), nil
 	case globals.ExitMarket:
 		updateLiquidityState(acc, globals.Redeem)
-		return packActionProcessStruct(globals.Redeem, "Ionic", globals.MaxRepayBigInt, globals.USDT, globals.USDT), nil
+		return packActionProcessStruct(globals.Redeem, "Ionic", globals.MaxRepayBigInt, globals.USDT, globals.NULL), nil
 	default:
 		updateLiquidityState(acc, globals.Repay)
-		return packActionProcessStruct(globals.Repay, "Ionic", globals.MaxRepayBigInt, globals.LISK, globals.LISK), nil
+		return packActionProcessStruct(globals.ExitMarket, "Ionic", globals.MaxRepayBigInt, globals.USDT, globals.NULL), nil
 	}
 }
 
