@@ -25,7 +25,7 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.3.9"
+	SoftVersion  = "v2.3.10"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -54,6 +54,9 @@ var (
 
 	// Need for gas in tx. If ETH < MinETHForTx - the execution of the count will end as a whole
 	MinETHForTx = big.NewInt(1e13) // 0.00001.
+
+	// need for oku swaps config percent use
+	OkuPercentUsage int // default 50%
 
 	AttentionGwei    *big.Int // GWEI have 9 decimals
 	AttentionTime    int      // Time in seconds that indicates how often to check the throttle reduction
@@ -93,7 +96,7 @@ var (
 	LimitedModules = map[string]int{
 		"Portal_daily_check": 1,
 		"Portal_main_tasks":  1,
-		"Checker":            1,
+		"Checker":            5,
 		"Relay":              1,
 		"IonicRepayAll":      1,
 		"IonicWithdrawAll":   2,

@@ -11,6 +11,7 @@ type Config struct {
 	MaxActionsTime   int               `json:"max_actions_time"`
 	IonicBorrow      string            `json:"ionic_borrow_amount"`
 	IonicSupply      string            `json:"ionic_supply_amount"`
+	OkuPercentUsage  int               `json:"oku_percen_usage"`
 	AttentionGwei    string            `json:"attention_gwei"`
 	AttentionTime    int               `json:"attention_time_cycle"`
 	MaxAttentionTime int               `json:"max_attention_time"`

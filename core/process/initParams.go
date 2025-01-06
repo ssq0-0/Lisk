@@ -46,3 +46,9 @@ func initGlobalDuration(globalVar *int, value int, name string) {
 		*globalVar = value
 	}
 }
+
+func initIntValue(globalVar *int, value int) {
+	if value != 0 {
+		*globalVar = value
+	}
+}

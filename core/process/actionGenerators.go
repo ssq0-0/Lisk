@@ -6,18 +6,17 @@ import (
 	"lisk/ethClient"
 	"lisk/globals"
 	"lisk/logger"
+	"log"
 	"math/big"
 	"math/rand"
 	"time"
-
-	"github.com/ethereum/go-ethereum/common"
 )
 
 var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
 	"Oku":                generateSwap,
 	"IonicWithdrawAll":   generateIonicWithdraw,
 	"IonicRepayAll":      generateIonicRepay,
-	"Ionic15Borrow":      generate15Borrow(globals.Borrow, globals.LISK, globals.IonicBorrow),
+	"Ionic15Borrow":      generate15Borrow,
 	"Ionic71Supply":      generateIonic71Supply,
 	"Relay":              generateBridgeToLisk,
 	"Checker":            generateChecker,
@@ -59,6 +58,7 @@ func generateTimeWindow(totalTime, actionCount int) []time.Duration {
 }
 
 func generateNextAction(acc *account.Account, selectedModule string, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	log.Printf("mod: %v", selectedModule)
 	generator, exists := actionGenerators[selectedModule]
 	if !exists {
 		return ActionProcess{TypeAction: globals.Unknown}, fmt.Errorf("no action generator for module '%s'", selectedModule)
@@ -112,16 +112,14 @@ func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (A
 	return ActionProcess{TypeAction: globals.Unknown}, fmt.Errorf("failed to generate swap after 5 attempts")
 }
 
-func generate15Borrow(actionType globals.ActionType, token common.Address, amount *big.Int) func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	return func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-		if actionType == globals.Borrow && acc.LiquidityState.ActionCount == 0 {
-			acc.LiquidityState.ActionCount++
-			return packActionProcessStruct(globals.EnterMarket, "Ionic", big.NewInt(0), globals.USDT, globals.NULL), nil
-		}
-
-		acc.LiquidityState.LastAction = actionType
-		return packActionProcessStruct(actionType, "Ionic", globals.IonicBorrow, token, globals.NULL), nil
+func generate15Borrow(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	if acc.LiquidityState.ActionCount == 0 {
+		acc.LiquidityState.ActionCount++
+		return packActionProcessStruct(globals.EnterMarket, "Ionic", big.NewInt(0), globals.USDT, globals.NULL), nil
 	}
+
+	// acc.LiquidityState.LastAction = actionType
+	return packActionProcessStruct(globals.Borrow, "Ionic", globals.IonicBorrow, globals.LISK, globals.NULL), nil
 }
 
 func generateIonic71Supply(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {

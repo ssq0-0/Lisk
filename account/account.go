@@ -6,12 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"lisk/config"
+	"lisk/globals"
 	"lisk/models"
 	"lisk/utils"
 	"sync"
-
-	"math/rand"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"golang.org/x/sync/errgroup"
@@ -55,8 +53,6 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 				return ctx.Err()
 			}
 
-			randSource := rand.New(rand.NewSource(time.Now().UnixNano()))
-
 			privateKey, err := utils.ParsePrivateKey(pk)
 			if err != nil {
 				return err
@@ -85,7 +81,7 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 				LiquidityState:      &models.LiquidityState{},
 				ActionsCount:        cfg.ActionCounts,
 				ActionsTime:         cfg.MaxActionsTime,
-				BalancePercentUsage: 30 + randSource.Intn(47),
+				BalancePercentUsage: globals.OkuPercentUsage,
 				Stats:               make(map[string]int),
 				Proxy:               proxy,
 			}
