@@ -120,7 +120,7 @@ func generate15Borrow(actionType globals.ActionType, token common.Address, amoun
 		}
 
 		acc.LiquidityState.LastAction = actionType
-		return packActionProcessStruct(actionType, "Ionic", amount, token, globals.NULL), nil
+		return packActionProcessStruct(actionType, "Ionic", globals.IonicBorrow, token, globals.NULL), nil
 	}
 }
 
