@@ -6,7 +6,6 @@ import (
 	"lisk/ethClient"
 	"lisk/globals"
 	"lisk/logger"
-	"log"
 	"math/big"
 	"math/rand"
 	"time"
@@ -58,7 +57,6 @@ func generateTimeWindow(totalTime, actionCount int) []time.Duration {
 }
 
 func generateNextAction(acc *account.Account, selectedModule string, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	log.Printf("mod: %v", selectedModule)
 	generator, exists := actionGenerators[selectedModule]
 	if !exists {
 		return ActionProcess{TypeAction: globals.Unknown}, fmt.Errorf("no action generator for module '%s'", selectedModule)
