@@ -28,6 +28,7 @@ const (
 	FonbnkVerif    ActionType = "fonbunkVerif"
 	XelarkVerif    ActionType = "xelarVerif"
 	Gitcoin        ActionType = "gitcoin"
+	Balance        ActionType = "checkBalance"
 )
 
 var (

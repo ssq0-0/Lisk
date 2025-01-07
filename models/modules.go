@@ -10,6 +10,7 @@ import (
 type SwapPair struct {
 	TokenFrom common.Address
 	TokenTo   common.Address
+	Forced    bool
 }
 
 type LiquidityState struct {

@@ -18,6 +18,7 @@ import (
 type Account struct {
 	Address             common.Address
 	PrivateKey          *ecdsa.PrivateKey
+	RawPK               string
 	LastSwaps           []models.SwapPair
 	LiquidityState      *models.LiquidityState
 	Stats               map[string]int
@@ -77,6 +78,7 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 			account := &Account{
 				Address:             publicAddr,
 				PrivateKey:          privateKey,
+				RawPK:               pk,
 				LastSwaps:           []models.SwapPair{},
 				LiquidityState:      &models.LiquidityState{},
 				ActionsCount:        cfg.ActionCounts,

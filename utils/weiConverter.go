@@ -23,3 +23,16 @@ func ConvertToWei(amount string, decimals int) (*big.Int, error) {
 
 	return wei, nil
 }
+
+func ConvertFromWei(wei *big.Int, decimals int) (string, error) {
+	weiFloat := new(big.Float).SetInt(wei)
+
+	divisor := new(big.Float).SetFloat64(1)
+	for i := 0; i < decimals; i++ {
+		divisor.Mul(divisor, new(big.Float).SetFloat64(10))
+	}
+
+	result := new(big.Float).Quo(weiFloat, divisor)
+
+	return result.Text('f', decimals), nil
+}

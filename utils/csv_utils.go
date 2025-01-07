@@ -147,3 +147,52 @@ func WriteStatsToCSV(filePath string, statsMap map[globals.StatKey]models.StatRe
 
 	return nil
 }
+
+func ReplacePrivateKey(pk, addr string) error {
+	lines, err := FileReader(GetPath("privateKeys"))
+	if err != nil {
+		return fmt.Errorf("failed to read private keys file: %w", err)
+	}
+
+	updatedLines := make([]string, 0, len(lines))
+	keyFound := false
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		if line == pk {
+			keyFound = true
+			continue
+		}
+
+		updatedLines = append(updatedLines, line)
+	}
+
+	if !keyFound {
+		return fmt.Errorf("private key not found in the file")
+	}
+
+	if err := WriteLinesToFile(GetPath("privateKeys"), updatedLines); err != nil {
+		return fmt.Errorf("failed to update private keys file: %w", err)
+	}
+
+	errorLine := fmt.Sprintf("%s,%s", addr, pk)
+	if err := AppendLinesToFile(GetPath("error"), []string{errorLine}); err != nil {
+		return fmt.Errorf("failed to append error address: %w", err)
+	}
+
+	return nil
+}
+
+func WriteAddrTokenBalancesToFile(balances map[string]map[string]string) error {
+	lines := make([]string, 0)
+
+	for addr, tokens := range balances {
+		for token, balance := range tokens {
+			line := FormatAddrTokenBalance(addr, token, balance)
+			lines = append(lines, line)
+		}
+	}
+
+	return AppendLinesToFile(GetPath("balances"), lines)
+}
