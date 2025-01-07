@@ -25,7 +25,7 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.3.10"
+	SoftVersion  = "v2.4.11"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -86,6 +86,13 @@ var (
 		common.HexToAddress("0xD501d4E381491F64274Cc65fdec32b47264a2422"): PoolInfo{Token0: 18, Token1: 18},
 	}
 
+	DecimalsMap = map[common.Address]int{
+		WETH: 18,
+		LISK: 18,
+		USDC: 6,
+		USDT: 6,
+	}
+
 	MinBalances = map[common.Address]*big.Int{
 		WETH: big.NewInt(1e14), // 0.00001
 		USDT: big.NewInt(1e5),  // 0.1
@@ -96,7 +103,8 @@ var (
 	LimitedModules = map[string]int{
 		"Portal_daily_check": 1,
 		"Portal_main_tasks":  1,
-		"Checker":            5,
+		"Checker":            1,
+		"BalanceCheck":       1,
 		"Relay":              1,
 		"IonicRepayAll":      1,
 		"IonicWithdrawAll":   2,
