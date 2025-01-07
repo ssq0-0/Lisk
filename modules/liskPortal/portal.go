@@ -7,6 +7,7 @@ import (
 	"lisk/httpClient"
 	"lisk/logger"
 	"lisk/models"
+	"lisk/utils"
 	"math/big"
 	"time"
 
@@ -124,9 +125,10 @@ func (p *Portal) processTaskResult(taskID int, result models.TaskResponse, ta gl
 	switch ta {
 	case globals.Checker:
 		userData := result.Data.Userdrop.User
-		logger.GlobalLogger.Infof("Checker task completed. Rank: %d | Points: %d | Last Update: %s |",
-			userData.Rank, userData.Points, userData.UpdateAt)
-
+		line := fmt.Sprintf("%s,%d,%d,%s", address.Hex(), userData.Rank, userData.Points, userData.UpdateAt)
+		if err := utils.AppendLinesToFile(utils.GetPath("task_results"), []string{line}); err != nil {
+			return fmt.Errorf("failed to append task result to file: %w", err)
+		}
 	case globals.DailyCheck, globals.MainTasks, globals.FonbnkVerif, globals.XelarkVerif, globals.Gitcoin, globals.HoldETH,
 		globals.HoldLISK, globals.HoldUSDC, globals.HoldUSDT, globals.HoldNFT, globals.TwitterDiscord:
 		taskStatus := result.Data.Userdrop.UpdateTaskStatus
