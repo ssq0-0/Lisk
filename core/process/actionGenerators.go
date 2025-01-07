@@ -21,6 +21,7 @@ var actionGenerators = map[string]func(acc *account.Account, clients map[string]
 	"Checker":            generateChecker,
 	"Portal_daily_check": generateDailyCheck,
 	"Portal_main_tasks":  generateMainTasks,
+	"BalanceCheck":       generateBalanceCheck,
 }
 
 func generateTimeWindow(totalTime, actionCount int) []time.Duration {
@@ -91,11 +92,13 @@ func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (A
 			return ActionProcess{TypeAction: globals.Unknown}, err
 		}
 
+		forced := false
 		if ethBal.Cmp(globals.MinBalances[globals.WETH]) < 0 {
 			tokenTo = globals.WETH
 			for attemps := 0; attemps < 5; attemps++ {
 				tokenFrom = selectDifferentToken(tokenTo)
 			}
+			forced = true
 		}
 
 		amount, err := canDoActionByBalance(tokenFrom, acc, clients["lisk"])
@@ -103,7 +106,7 @@ func generateSwap(acc *account.Account, clients map[string]*ethClient.Client) (A
 			return ActionProcess{TypeAction: globals.Unknown}, err
 		}
 
-		updateSwapHistory(acc, tokenFrom, tokenTo)
+		updateSwapHistory(acc, tokenFrom, tokenTo, forced)
 		return packActionProcessStruct(globals.Swap, "Oku", amount, tokenFrom, tokenTo), nil
 	}
 
@@ -116,7 +119,6 @@ func generate15Borrow(acc *account.Account, clients map[string]*ethClient.Client
 		return packActionProcessStruct(globals.EnterMarket, "Ionic", big.NewInt(0), globals.USDT, globals.NULL), nil
 	}
 
-	// acc.LiquidityState.LastAction = actionType
 	return packActionProcessStruct(globals.Borrow, "Ionic", globals.IonicBorrow, globals.LISK, globals.NULL), nil
 }
 
@@ -150,6 +152,10 @@ func generateBridgeToLisk(acc *account.Account, clients map[string]*ethClient.Cl
 	}
 	logger.GlobalLogger.Infof("Bridge to LISK. From: %s.", chain)
 	return bridgeToLisk(acc, balance, chain, clients[chain])
+}
+
+func generateBalanceCheck(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	return packActionProcessStruct(globals.Balance, "Balances", big.NewInt(0), globals.NULL, globals.NULL), nil
 }
 
 func bridgeToLisk(acc *account.Account, balance *big.Int, chain string, client *ethClient.Client) (ActionProcess, error) {

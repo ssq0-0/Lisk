@@ -59,7 +59,7 @@ func validateSwapHistory(lastSwaps []models.SwapPair) error {
 	if len(lastSwaps) > 1 {
 		last := lastSwaps[len(lastSwaps)-1]
 		prev := lastSwaps[len(lastSwaps)-2]
-		if last.TokenFrom == prev.TokenFrom && last.TokenTo == prev.TokenTo {
+		if last.TokenFrom == prev.TokenFrom && last.TokenTo == prev.TokenTo && !last.Forced {
 			return fmt.Errorf("two identical swaps in a row not allowed")
 		}
 	}
@@ -157,10 +157,11 @@ func calculateAmount(amount *big.Int, percent int) (*big.Int, error) {
 	return percentAmount, nil
 }
 
-func updateSwapHistory(acc *account.Account, tokenFrom, tokenTo common.Address) {
+func updateSwapHistory(acc *account.Account, tokenFrom, tokenTo common.Address, forced bool) {
 	acc.LastSwaps = append(acc.LastSwaps, models.SwapPair{
 		TokenFrom: tokenFrom,
 		TokenTo:   tokenTo,
+		Forced:    forced,
 	})
 }
 

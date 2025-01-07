@@ -6,6 +6,7 @@ import (
 	"lisk/config"
 	"lisk/ethClient"
 	"lisk/globals"
+	"lisk/modules/balanceChecker"
 	"lisk/modules/dex"
 	"lisk/modules/ionic"
 	"lisk/modules/liskPortal"
@@ -13,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -38,6 +40,15 @@ func ModulesInit(cfg *config.Config, abis map[string]*abi.ABI, clients map[strin
 		},
 		"Portal": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
 			return liskPortal.NewPortal(cfg.Endpoints["lisk_portal"], cfg.Endpoints["top"])
+		},
+		"Balances": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
+			tokens := map[string]common.Address{
+				"ETH":  globals.WETH,
+				"USDT": globals.USDT,
+				"USDC": globals.USDC,
+				"LISK": globals.LISK,
+			}
+			return balanceChecker.NewChecker(clients["lisk"], tokens)
 		},
 	}
 
