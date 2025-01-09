@@ -9,13 +9,17 @@
 ## Features
 
 - **Multi-Account Automation**: Concurrently processes multiple blockchain accounts.
-- **DEX Integration**: Handles swaps, liquidity management, and pool interactions.
-- **Lending Protocols**: Supports borrowing, lending, and collateral management.
+- **DEX Integration**: Handles swaps, liquidity management, and pool interactions. Dynamic swap to ETH if you suddenly run out of native coin to pay for gas
+- **Ionic Lending Protocols**: Supports borrowing, lending, and collateral management.
+- **Balance Sheet Verification**. The balance check module goes through all tokens in the network and writes all balances to a csv file
+- **WRAP_UNWRAP**. The module is required to accumulate the number of transactions due to high gas. The cheapest option to get the number of transactions.  
 - **Modular Design**: Easily extendable with new modules.
 - **Comprehensive Logging**: Tracks transactions and provides debugging information.
 - **Top Cheker**: Checking accounts in the leaderboard. Logging the number of points, place in the table and time of the last update
 - **Task performer**: Marks all available assignments complete, provided they are completed in advance. Also - daily task
 - **Version control system**: Automatic checking of the software version relevance and registration of warnings in case of an update, as well as a link to the new release
+- **Debugging erroneous accounts**: If a critical error (no balance on the wallet) occurs during the execution of the programme, this functionality will move the wallet from the general list to a separate file for erroneous wallets, so that you can configure it afterwards and run it without the others. 
+- **Statistics**:  Account statistics functionality: general statistics file with successful actions/portal points/rank/last update date
 
 ---
 ## Installation
@@ -63,15 +67,11 @@ This section defines the proxy used by the program. Each proxy is described by t
 ---
 ### Config (`config.json`)
 
-1. Customise your configuration. There are two fields you can operate on: ‘actions_count’ and ‘max_actions_time’. The first one is responsible for the number of actions in case of Oku & Relay, and the second one for the programme execution time. 
+1. Customise your configuration. There are two fields you can operate on: ‘actions_count’ and ‘max_actions_time’. The first one is responsible for the number of actions in case of Oku & WRAP_UNWRAP, and the second one for the programme execution time. 
 
-For example you have chosen 5 actions and 10 minutes => actions will be repeated every 2 minutes +-.
+Full instructions for setting can be found in the same file, with detailed comments on each parameter. Initially, the basic configuration with average values is set up as follows
 
-2. **globals.go** 
-- In this file, you can configure the start date of the software to track progress in a specified format in the comments
-- You can change the values of Borrow & Supply. The format is specified in the comments
-
-3. Balance
+2. Balance
 It is important to note that the minimum balances to work with the software: 
 - +- 0.35$ in ETH
 - 0.1 USDT/USDC
@@ -81,12 +81,14 @@ It is important to note that the minimum balances to work with the software:
 
 ### Modules (`modules`)
 
+- Wraper. Module for WRAP/UNWRAP operations. 
 - Oku. Random dex swaps.
 - Ionic. Supply, repay + withdraw, borrow.
 - Relay. Bridge ETH from other L2 chains to LISK.
-- Top Checker. Makes a request to the platform and checks your rank+place+date of last updated information
-- Task Performer. Collects points for completed tasks on the platform
-- Daily checker. Makes a daily check on the platform
+- Top Checker. Makes a request to the platform and checks your rank+place+date of last updated information.
+- Task Performer. Collects points for completed tasks on the platform.
+- Daily checker. Makes a daily check on the platform.
+- balance checker. Check balance in all token in LISK chain.
 - Version control.
 
 ### For additional assistance or troubleshooting, refer to the official documentation or reach out via [support channel](https://t.me/cheifssq).
