@@ -22,6 +22,7 @@ var actionGenerators = map[string]func(acc *account.Account, clients map[string]
 	"Portal_daily_check": generateDailyCheck,
 	"Portal_main_tasks":  generateMainTasks,
 	"BalanceCheck":       generateBalanceCheck,
+	"Wrap_Unwrap":        generateWrapers,
 }
 
 func generateTimeWindow(totalTime, actionCount int) []time.Duration {
@@ -128,6 +129,17 @@ func generateIonic71Supply(acc *account.Account, clients map[string]*ethClient.C
 
 func generateIonicRepay(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
 	return packActionProcessStruct(globals.Repay, "Ionic", globals.MaxRepayBigInt, globals.LISK, globals.NULL), nil
+}
+
+func generateWrapers(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	switch acc.WrapHistory.LastAction {
+	case globals.Wrap:
+		acc.WrapHistory.LastAction = globals.Unwrap
+		return packActionProcessStruct(globals.Unwrap, "Wraper", globals.WrapAmount, globals.NULL, globals.NULL), nil
+	default:
+		acc.WrapHistory.LastAction = globals.Wrap
+		return packActionProcessStruct(globals.Wrap, "Wraper", globals.WrapAmount, globals.NULL, globals.NULL), nil
+	}
 }
 
 func generateIonicWithdraw(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {

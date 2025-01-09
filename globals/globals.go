@@ -25,7 +25,7 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.4.11"
+	SoftVersion  = "v2.5.11"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -57,6 +57,9 @@ var (
 
 	// need for oku swaps config percent use
 	OkuPercentUsage int // default 50%
+
+	// need for wrap/unwrap
+	WrapAmount *big.Int // set in config
 
 	AttentionGwei    *big.Int // GWEI have 9 decimals
 	AttentionTime    int      // Time in seconds that indicates how often to check the throttle reduction
@@ -116,6 +119,7 @@ var (
 var (
 	Erc20JSON = []byte(`[
 	{
+		
 		"constant":true,
 		"inputs":[{"name":"account","type":"address"}],
 		"name":"balanceOf",
@@ -132,6 +136,30 @@ var (
 		"payable":false,
 		"stateMutability":"view",
 		"type":"function"
+	},
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "deposit",
+		"outputs": [],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+			"internalType": "uint256",
+			"name": "wad",
+			"type": "uint256"
+			}
+		],
+		"name": "withdraw",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"constant":false,

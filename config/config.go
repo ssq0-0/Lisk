@@ -12,6 +12,7 @@ type Config struct {
 	IonicBorrow      string            `json:"ionic_borrow_amount"`
 	IonicSupply      string            `json:"ionic_supply_amount"`
 	OkuPercentUsage  int               `json:"oku_percen_usage"`
+	WrapAmount       string            `json:"amount_to_wrap"`
 	AttentionGwei    string            `json:"attention_gwei"`
 	AttentionTime    int               `json:"attention_time_cycle"`
 	MaxAttentionTime int               `json:"max_attention_time"`

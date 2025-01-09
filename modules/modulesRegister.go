@@ -11,6 +11,7 @@ import (
 	"lisk/modules/ionic"
 	"lisk/modules/liskPortal"
 	"lisk/modules/relay"
+	"lisk/modules/wraper"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -40,6 +41,9 @@ func ModulesInit(cfg *config.Config, abis map[string]*abi.ABI, clients map[strin
 		},
 		"Portal": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
 			return liskPortal.NewPortal(cfg.Endpoints["lisk_portal"], cfg.Endpoints["top"])
+		},
+		"Wraper": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
+			return wraper.NewWraper(clients["lisk"])
 		},
 		"Balances": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
 			tokens := map[string]common.Address{

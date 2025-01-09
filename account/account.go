@@ -20,6 +20,7 @@ type Account struct {
 	PrivateKey          *ecdsa.PrivateKey
 	RawPK               string
 	LastSwaps           []models.SwapPair
+	WrapHistory         models.WrapHistory
 	LiquidityState      *models.LiquidityState
 	Stats               map[string]int
 	Mu                  sync.Mutex
@@ -80,6 +81,7 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 				PrivateKey:          privateKey,
 				RawPK:               pk,
 				LastSwaps:           []models.SwapPair{},
+				WrapHistory:         models.WrapHistory{},
 				LiquidityState:      &models.LiquidityState{},
 				ActionsCount:        cfg.ActionCounts,
 				ActionsTime:         cfg.MaxActionsTime,

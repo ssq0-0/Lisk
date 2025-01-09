@@ -29,6 +29,8 @@ const (
 	XelarkVerif    ActionType = "xelarVerif"
 	Gitcoin        ActionType = "gitcoin"
 	Balance        ActionType = "checkBalance"
+	Wrap           ActionType = "wrapETH"
+	Unwrap         ActionType = "unwrapETH"
 )
 
 var (

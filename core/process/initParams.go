@@ -19,6 +19,7 @@ func InitGlobals(cfg *config.Config) {
 	}
 
 	initIntValue(&globals.OkuPercentUsage, cfg.OkuPercentUsage)
+	initGlobalWei(&globals.WrapAmount, cfg.WrapAmount, 18, "WrapAmount")
 	initGlobalWei(&globals.AttentionGwei, cfg.AttentionGwei, 9, "AttantionGwei")
 	initGlobalWei(&globals.IonicBorrow, cfg.IonicBorrow, 18, "IonicBorrow")
 	initGlobalWei(&globals.IonicSupply, cfg.IonicSupply, 6, "IonicSupply")

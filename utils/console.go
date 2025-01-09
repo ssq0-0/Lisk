@@ -36,6 +36,7 @@ func UserChoice() string {
 		"3. Relay",
 		"4. Portal",
 		"5. BalanceCheck",
+		"6. Wrap_Unwrap",
 		"0. Exit",
 	}
 
@@ -62,7 +63,7 @@ func UserChoice() string {
 		selected = rgx.ReplaceAllString(selected, "")
 
 		switch selected {
-		case "Oku", "Relay", "BalanceCheck":
+		case "Oku", "Relay", "BalanceCheck", "Wrap_Unwrap":
 			return selected
 		case "Ionic", "Portal":
 			if subSelected := handleSubMenu(selected, subMenus[selected], rgx); subSelected != "" {

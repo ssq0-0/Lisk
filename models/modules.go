@@ -13,6 +13,10 @@ type SwapPair struct {
 	Forced    bool
 }
 
+type WrapHistory struct {
+	LastAction globals.ActionType
+}
+
 type LiquidityState struct {
 	ActionCount               int
 	LastAction                globals.ActionType
