@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -155,6 +156,18 @@ func calculateAmount(amount *big.Int, percent int) (*big.Int, error) {
 	percentAmount := new(big.Int).Mul(amount, big.NewInt(int64(percent)))
 	percentAmount.Div(percentAmount, big.NewInt(100))
 	return percentAmount, nil
+}
+
+func getRandomValue(min, max *big.Int) *big.Int {
+	if min.Cmp(max) >= 0 {
+		return min
+	}
+	diff := new(big.Int).Sub(max, min)
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	randomInt := rng.Int63n(diff.Int64())
+	randomValue := big.NewInt(randomInt)
+	return new(big.Int).Add(min, randomValue)
 }
 
 func updateSwapHistory(acc *account.Account, tokenFrom, tokenTo common.Address, forced bool) {

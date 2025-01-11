@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"lisk/models"
 	"math/big"
 )
 
@@ -24,7 +25,7 @@ func ConvertToWei(amount string, decimals int) (*big.Int, error) {
 	return wei, nil
 }
 
-func ConvertFromWei(wei *big.Int, decimals int) (string, error) {
+func ConvertFromWei(wei *big.Int, decimals int) string {
 	weiFloat := new(big.Float).SetInt(wei)
 
 	divisor := new(big.Float).SetFloat64(1)
@@ -34,5 +35,22 @@ func ConvertFromWei(wei *big.Int, decimals int) (string, error) {
 
 	result := new(big.Float).Quo(weiFloat, divisor)
 
-	return result.Text('f', decimals), nil
+	return result.Text('f', decimals)
+}
+
+func ConvertWrapAmount(minStr, maxStr string) (models.WrapRange, error) {
+	min, err := ConvertToWei(minStr, 18)
+	if err != nil {
+		return models.WrapRange{}, err
+	}
+
+	max, err := ConvertToWei(maxStr, 18)
+	if err != nil {
+		return models.WrapRange{}, err
+	}
+
+	return models.WrapRange{
+		Min: min,
+		Max: max,
+	}, nil
 }

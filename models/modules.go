@@ -15,6 +15,12 @@ type SwapPair struct {
 
 type WrapHistory struct {
 	LastAction globals.ActionType
+	LastAmount *big.Int
+}
+
+type WrapRange struct {
+	Min *big.Int
+	Max *big.Int
 }
 
 type LiquidityState struct {

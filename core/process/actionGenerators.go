@@ -132,13 +132,16 @@ func generateIonicRepay(acc *account.Account, clients map[string]*ethClient.Clie
 }
 
 func generateWrapers(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	amount := getRandomValue(acc.WrapRange.Min, acc.WrapRange.Max)
+
 	switch acc.WrapHistory.LastAction {
 	case globals.Wrap:
 		acc.WrapHistory.LastAction = globals.Unwrap
-		return packActionProcessStruct(globals.Unwrap, "Wraper", globals.WrapAmount, globals.NULL, globals.NULL), nil
+		return packActionProcessStruct(globals.Unwrap, "Wraper", acc.WrapHistory.LastAmount, globals.NULL, globals.NULL), nil
 	default:
 		acc.WrapHistory.LastAction = globals.Wrap
-		return packActionProcessStruct(globals.Wrap, "Wraper", globals.WrapAmount, globals.NULL, globals.NULL), nil
+		acc.WrapHistory.LastAmount = amount
+		return packActionProcessStruct(globals.Wrap, "Wraper", acc.WrapHistory.LastAmount, globals.NULL, globals.NULL), nil
 	}
 }
 

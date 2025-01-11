@@ -56,10 +56,10 @@ var (
 	MinETHForTx = big.NewInt(1e13) // 0.00001.
 
 	// need for oku swaps config percent use
-	OkuPercentUsage int // default 50%
+	// OkuPercentUsage int // default 50%
 
 	// need for wrap/unwrap
-	WrapAmount *big.Int // set in config
+	// WrapAmount *big.Int // set in config
 
 	AttentionGwei    *big.Int // GWEI have 9 decimals
 	AttentionTime    int      // Time in seconds that indicates how often to check the throttle reduction

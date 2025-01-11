@@ -36,11 +36,7 @@ func (c *Checker) Action(tokenIn, tokenOut common.Address, amountIn *big.Int, ac
 			return fmt.Errorf("failed to check balance for token %s: %w", token, err)
 		}
 
-		result, err := utils.ConvertFromWei(balance, globals.DecimalsMap[address])
-		if err != nil {
-			return fmt.Errorf("failed to convert balance for token %s: %w", token, err)
-		}
-
+		result := utils.ConvertFromWei(balance, globals.DecimalsMap[address])
 		if _, exists := balances[acc.Address.Hex()]; !exists {
 			balances[acc.Address.Hex()] = make(map[string]string)
 		}
