@@ -61,9 +61,6 @@ func (h *HttpClient) SendJSONRequest(urlRequest, method string, reqBody, respBod
 }
 
 func (h *HttpClient) createRequest(urlRequest, method string, reqBody interface{}) (*http.Request, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
 	var body io.Reader
 	if reqBody != nil {
 		jsonData, err := json.Marshal(reqBody)
@@ -73,7 +70,7 @@ func (h *HttpClient) createRequest(urlRequest, method string, reqBody interface{
 		body = bytes.NewBuffer(jsonData)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, urlRequest, body)
+	req, err := http.NewRequestWithContext(context.Background(), method, urlRequest, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %v", err)
 	}
