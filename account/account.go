@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"lisk/config"
-	"lisk/globals"
 	"lisk/models"
 	"lisk/utils"
 	"sync"
@@ -21,6 +20,7 @@ type Account struct {
 	RawPK               string
 	LastSwaps           []models.SwapPair
 	WrapHistory         models.WrapHistory
+	WrapRange           models.WrapRange
 	LiquidityState      *models.LiquidityState
 	Stats               map[string]int
 	Mu                  sync.Mutex
@@ -39,6 +39,11 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 	defer cancel()
 
 	g, ctx := errgroup.WithContext(ctx)
+
+	wrapRange, err := utils.ConvertWrapAmount(cfg.WrapMinAmount, cfg.WrapMaxAmount)
+	if err != nil {
+		return nil, err
+	}
 
 	var (
 		accs []*Account
@@ -82,10 +87,11 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 				RawPK:               pk,
 				LastSwaps:           []models.SwapPair{},
 				WrapHistory:         models.WrapHistory{},
+				WrapRange:           wrapRange,
 				LiquidityState:      &models.LiquidityState{},
 				ActionsCount:        cfg.ActionCounts,
 				ActionsTime:         cfg.MaxActionsTime,
-				BalancePercentUsage: globals.OkuPercentUsage,
+				BalancePercentUsage: cfg.OkuPercentUsage,
 				Stats:               make(map[string]int),
 				Proxy:               proxy,
 			}
