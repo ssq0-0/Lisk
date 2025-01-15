@@ -35,8 +35,7 @@ func ProcessAccounts(accs []*account.Account, selectModule string, mod map[strin
 
 	g, ctx := errgroup.WithContext(ctx)
 
-	const maxConcurrency = 10
-	semaphore := make(chan struct{}, maxConcurrency)
+	semaphore := make(chan struct{}, globals.GorutinesCount)
 
 	var (
 		mu       sync.Mutex

@@ -1,5 +1,6 @@
 {
     "_INSTRUCTIONS_":{
+        "_threads":"The number of simultaneously operating goroutines. In other words - flows",
         "_start_date":"This field is necessary to keep statistics in the file account_state.csv, so that it would be convenient to keep track of the weeks that will be calculated automatically. You can specify only the date, time is optional",
         "_actions_count":"Number of actions. Works only for OKU AND WRAP_UNWRAP, for other modules the number of actions is specified in the map LimitedModules, which can be found in globals.go",
         "_max_actions_time":"Account runtime. The time is divided by the number of actions and distributed evenly. Example: 2 actions 1 minute => 30+- seconds for each action",
@@ -11,6 +12,7 @@
         "_attention_time_cycle":"Time in seconds. Period after which the check will be performed (by default it is every 60 seconds).",
         "_max_attentionn_time":"Time in minutes. Maximum time to wait for a lower gas, after which the programme will be stopped completely (default is 60 minutes)."
     },
+    "threads":10,
     "start_date":"2025-01-01T00:00:00Z",
     "actions_count":10,
     "max_actions_time":10,

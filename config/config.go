@@ -6,6 +6,7 @@ import (
 )
 
 type Config struct {
+	Threads          int               `json:"threads"`
 	StartDate        string            `json:"start_date"`
 	ActionCounts     int               `json:"actions_count"`
 	MaxActionsTime   int               `json:"max_actions_time"`
