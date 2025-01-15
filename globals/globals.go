@@ -25,7 +25,7 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.6.11"
+	SoftVersion  = "v2.7.0"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -60,6 +60,9 @@ var (
 
 	// need for wrap/unwrap
 	// WrapAmount *big.Int // set in config
+
+	// Number of simultaneously operating goroutines for user control over the semaphore
+	GorutinesCount int
 
 	AttentionGwei    *big.Int // GWEI have 9 decimals
 	AttentionTime    int      // Time in seconds that indicates how often to check the throttle reduction
