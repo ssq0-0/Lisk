@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"lisk/models"
 	"math/big"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func ConvertToWei(amount string, decimals int) (*big.Int, error) {
@@ -38,19 +40,26 @@ func ConvertFromWei(wei *big.Int, decimals int) string {
 	return result.Text('f', decimals)
 }
 
-func ConvertWrapAmount(minStr, maxStr string) (models.WrapRange, error) {
-	min, err := ConvertToWei(minStr, 18)
+func ConvertRangeAmount(minStr, maxStr string, decimals int, token common.Address, model interface{}) error {
+	min, err := ConvertToWei(minStr, decimals)
 	if err != nil {
-		return models.WrapRange{}, err
+		return err
 	}
 
-	max, err := ConvertToWei(maxStr, 18)
+	max, err := ConvertToWei(maxStr, decimals)
 	if err != nil {
-		return models.WrapRange{}, err
+		return err
 	}
 
-	return models.WrapRange{
-		Min: min,
-		Max: max,
-	}, nil
+	switch m := model.(type) {
+	case *models.WrapRange:
+		m.Min = min
+		m.Max = max
+	case *models.SwapRange:
+		m.MinSwapAmount[token] = min
+		m.MaxSwapAmount[token] = max
+	default:
+		return fmt.Errorf("неподдерживаемый тип модели")
+	}
+	return nil
 }

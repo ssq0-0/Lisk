@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"lisk/config"
+	"lisk/globals"
 	"lisk/models"
 	"lisk/utils"
+	"math/big"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -21,6 +23,7 @@ type Account struct {
 	LastSwaps           []models.SwapPair
 	WrapHistory         models.WrapHistory
 	WrapRange           models.WrapRange
+	SwapRange           models.SwapRange
 	LiquidityState      *models.LiquidityState
 	Stats               map[string]int
 	Mu                  sync.Mutex
@@ -35,15 +38,15 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 		return nil, errors.New("privateKeys list is empty")
 	}
 
+	wrapRange, swapRange, err := prepareRanges(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare ranges: %w", err)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	g, ctx := errgroup.WithContext(ctx)
-
-	wrapRange, err := utils.ConvertWrapAmount(cfg.WrapMinAmount, cfg.WrapMaxAmount)
-	if err != nil {
-		return nil, err
-	}
 
 	var (
 		accs []*Account
@@ -87,7 +90,8 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 				RawPK:               pk,
 				LastSwaps:           []models.SwapPair{},
 				WrapHistory:         models.WrapHistory{},
-				WrapRange:           wrapRange,
+				WrapRange:           *wrapRange,
+				SwapRange:           *swapRange,
 				LiquidityState:      &models.LiquidityState{},
 				ActionsCount:        cfg.ActionCounts,
 				ActionsTime:         cfg.MaxActionsTime,
@@ -109,4 +113,32 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 	}
 
 	return accs, nil
+}
+
+func prepareRanges(cfg *config.Config) (*models.WrapRange, *models.SwapRange, error) {
+	var wrapRange models.WrapRange
+	if err := utils.ConvertRangeAmount(cfg.WrapMinAmount, cfg.WrapMaxAmount, 18, globals.NULL, &wrapRange); err != nil {
+		return nil, nil, err
+	}
+
+	swapRange := models.SwapRange{
+		MinSwapAmount: make(map[common.Address]*big.Int),
+		MaxSwapAmount: make(map[common.Address]*big.Int),
+	}
+
+	addresses := []common.Address{globals.USDT, globals.USDC, globals.WETH}
+	for _, addr := range addresses {
+		var err error
+		switch addr {
+		case globals.USDT, globals.USDC:
+			err = utils.ConvertRangeAmount(cfg.SwapUSDTMinAmount, cfg.SwapUSDTMaxAmount, 6, addr, &swapRange)
+		case globals.WETH:
+			err = utils.ConvertRangeAmount(cfg.SwapEthMinAmount, cfg.SwapEthMaxAmount, 18, addr, &swapRange)
+		}
+		if err != nil {
+			return &models.WrapRange{}, &models.SwapRange{}, err
+		}
+	}
+
+	return &wrapRange, &swapRange, nil
 }

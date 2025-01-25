@@ -7,6 +7,8 @@ import (
 	"lisk/utils"
 	"math/big"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func InitGlobals(cfg *config.Config) {
@@ -19,6 +21,8 @@ func InitGlobals(cfg *config.Config) {
 	}
 
 	initIntValue(&globals.GorutinesCount, cfg.Threads)
+	updateMapValue(globals.MinBalances, globals.USDT, cfg.MinUSDTForSwap, 6, "USDTAmount")
+	updateMapValue(globals.MinBalances, globals.USDC, cfg.MinUSDTForSwap, 6, "USDCAmount")
 	initGlobalWei(&globals.AttentionGwei, cfg.AttentionGwei, 9, "AttantionGwei")
 	initGlobalWei(&globals.IonicBorrow, cfg.IonicBorrow, 18, "IonicBorrow")
 	initGlobalWei(&globals.IonicSupply, cfg.IonicSupply, 6, "IonicSupply")
@@ -39,6 +43,18 @@ func initGlobalWei(globalVar **big.Int, value string, decimals int, name string)
 			return
 		}
 		*globalVar = convertedValue
+	}
+}
+
+func updateMapValue(m map[common.Address]*big.Int, key common.Address, value string, decimals int, name string) {
+	if value != "" {
+		convertedValue, err := utils.ConvertToWei(value, decimals)
+		if err != nil {
+			logger.GlobalLogger.Errorf("failed to convert %s: %v", name, err)
+			return
+		}
+
+		m[key] = convertedValue
 	}
 }
 

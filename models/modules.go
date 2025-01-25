@@ -18,6 +18,11 @@ type WrapHistory struct {
 	LastAmount *big.Int
 }
 
+type SwapRange struct {
+	MinSwapAmount map[common.Address]*big.Int
+	MaxSwapAmount map[common.Address]*big.Int
+}
+
 type WrapRange struct {
 	Min *big.Int
 	Max *big.Int
