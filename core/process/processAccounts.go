@@ -120,6 +120,9 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 	for successfulActions < totalActions {
 		sleepDuration := generateTimeWindow(acc.ActionsTime, totalActions)[0]
 
+		logger.GlobalLogger.Infof("[%v] Sleep before action %v", acc.Address, sleepDuration)
+		time.Sleep(sleepDuration)
+
 		action, err := generateNextAction(acc, selectModule, clients)
 		if err != nil {
 			if isCriticalError(err) {
@@ -162,9 +165,7 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 			acc.Stats[selectModule]++
 			successfulActions++
 
-			logger.GlobalLogger.Infof("[%v] Action has been completed. Sleep %v", acc.Address.Hex(), sleepDuration)
-			time.Sleep(sleepDuration)
-
+			logger.GlobalLogger.Infof("[%v] Action has been completed.", acc.Address.Hex())
 			break actionLoop
 		}
 	}

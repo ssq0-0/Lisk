@@ -131,7 +131,7 @@ func canDoActionByBalance(token common.Address, acc *account.Account, client *et
 			token.Hex(), acc.Address.Hex())
 	}
 
-	return calculateAmount(balance, acc.BalancePercentUsage)
+	return getRandomValue(acc.SwapRange.MinSwapAmount[token], acc.SwapRange.MaxSwapAmount[token]), nil
 }
 
 func checkMinimalAmount(balance *big.Int, token common.Address) bool {
@@ -150,12 +150,6 @@ func packActionProcessStruct(typeAction globals.ActionType, module string, amoun
 		TokenFrom:  tokenFrom,
 		TokenTo:    tokenTo,
 	}
-}
-
-func calculateAmount(amount *big.Int, percent int) (*big.Int, error) {
-	percentAmount := new(big.Int).Mul(amount, big.NewInt(int64(percent)))
-	percentAmount.Div(percentAmount, big.NewInt(100))
-	return percentAmount, nil
 }
 
 func getRandomValue(min, max *big.Int) *big.Int {
