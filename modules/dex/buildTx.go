@@ -10,13 +10,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (d *Dex) buildTxData(tokenIn, tokenOut common.Address, amountIn *big.Int, acc *account.Account) ([]byte, [][]byte, error) {
-	fee, err := d.getFee(tokenIn, tokenOut)
+func (d *Dex) buildTxData(tokenIn, tokenOut common.Address, amountIn *big.Int, acc *account.Account, fee *big.Int) ([]byte, [][]byte, error) {
+	totalFee, err := d.fetchPool(tokenIn, tokenOut, fee)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	pathBytes, err := d.encodeV3Path(tokenIn, fee, tokenOut)
+	pathBytes, err := d.encodeV3Path(tokenIn, totalFee.Fee, tokenOut)
 	if err != nil {
 		return nil, nil, err
 	}

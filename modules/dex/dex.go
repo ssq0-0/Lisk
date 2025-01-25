@@ -6,6 +6,7 @@ import (
 	"lisk/ethClient"
 	"lisk/globals"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -47,7 +48,6 @@ func NewDex(addresses map[string]string, univAbi *abi.ABI, client *ethClient.Cli
 		big.NewInt(500),
 		big.NewInt(1000),
 		big.NewInt(3000),
-		big.NewInt(10000),
 	}
 
 	return &Dex{
@@ -62,25 +62,17 @@ func NewDex(addresses map[string]string, univAbi *abi.ABI, client *ethClient.Cli
 }
 
 func (d *Dex) Action(tokenIn, tokenOut common.Address, amountIn *big.Int, acc *account.Account, actionType globals.ActionType) error {
-	commands, inputs, err := d.buildTxData(tokenIn, tokenOut, amountIn, acc)
+	data, value, err := d.createTransaction(tokenIn, tokenOut, amountIn, acc)
 	if err != nil {
 		return err
 	}
+
 	if !ethClient.IsNativeToken(tokenIn) {
 		if err := d.ensureAllowance(tokenIn, amountIn, acc); err != nil {
 			return fmt.Errorf("failed to approve tokens: %w", err)
 		}
 	}
-	deadline := big.NewInt(time.Now().Unix() + int64(globals.DefaultDeadlineOffset)) // 20 min
-	data, err := d.ABI.Pack("execute", commands, inputs, deadline)
-	if err != nil {
-		return fmt.Errorf("failed to pack universalRouter.execute: %w", err)
-	}
 
-	value := big.NewInt(0)
-	if ethClient.IsNativeToken(tokenIn) {
-		value = amountIn
-	}
 	return d.Client.SendTransaction(
 		acc.PrivateKey,
 		acc.Address,
@@ -89,4 +81,63 @@ func (d *Dex) Action(tokenIn, tokenOut common.Address, amountIn *big.Int, acc *a
 		value,
 		data,
 	)
+}
+
+func (d *Dex) createTransaction(tokenIn, tokenOut common.Address, amountIn *big.Int, acc *account.Account) ([]byte, *big.Int, error) {
+	var (
+		localFees = append([]*big.Int{}, d.Fees...)
+		commands  []byte
+		inputs    [][]byte
+		err       error
+	)
+
+	for i := 0; i < len(localFees); i++ {
+		fee := localFees[i]
+		commands, inputs, err = d.buildTxData(tokenIn, tokenOut, amountIn, acc, fee)
+		if err != nil {
+			if verifyError(err) {
+				localFees = removeFee(localFees, i)
+				i--
+				continue
+			}
+			return nil, nil, fmt.Errorf("error building transaction data: %w", err)
+		}
+	}
+	deadline := big.NewInt(time.Now().Unix() + int64(globals.DefaultDeadlineOffset)) // 20 min
+	data, err := d.ABI.Pack("execute", commands, inputs, deadline)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to pack universalRouter.execute: %w", err)
+	}
+
+	value := big.NewInt(0)
+	if ethClient.IsNativeToken(tokenIn) {
+		value = amountIn
+	}
+
+	return data, value, nil
+}
+
+func removeFee(fees []*big.Int, index int) []*big.Int {
+	return append(fees[:index], fees[index+1:]...)
+}
+
+func verifyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+	errorSubstrings := []string{
+		"no pool found for tokens",
+		"invalid price calculated",
+		"invalid pool address returned",
+		"call to Quoter failed: execution reverted",
+		// "Gas wait timeout has been exceeded",
+	}
+
+	for _, substr := range errorSubstrings {
+		if strings.Contains(errMsg, substr) {
+			return true
+		}
+	}
+	return false
 }
