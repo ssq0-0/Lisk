@@ -25,7 +25,7 @@ func init() {
 }
 
 const (
-	SoftVersion  = "v2.7.0"
+	SoftVersion  = "v2.8.0"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -54,6 +54,9 @@ var (
 
 	// Need for gas in tx. If ETH < MinETHForTx - the execution of the count will end as a whole
 	MinETHForTx = big.NewInt(1e13) // 0.00001.
+
+	// Need for gas in tx. If ETH < MinETHForTx - the execution of the count will end as a whole
+	MinUsdtForTx big.Int
 
 	// need for oku swaps config percent use
 	// OkuPercentUsage int // default 50%
@@ -101,8 +104,8 @@ var (
 
 	MinBalances = map[common.Address]*big.Int{
 		WETH: big.NewInt(1e14), // 0.00001
-		USDT: big.NewInt(1e5),  // 0.1
-		USDC: big.NewInt(1e5),  // 0.1
+		USDT: &MinUsdtForTx,    // 0.1
+		USDC: &MinUsdtForTx,    // 0.1
 		LISK: big.NewInt(1e17), // 0.1
 	}
 
