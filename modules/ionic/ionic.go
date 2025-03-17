@@ -54,7 +54,7 @@ func (i *Ionic) Action(tokenIn, tokenOut common.Address, amountIn *big.Int, acc 
 }
 
 func (i *Ionic) ensureAllowance(tokenIn common.Address, acc *account.Account, amountIn *big.Int) error {
-	if _, err := i.Client.ApproveTx(tokenIn, i.Tokens[tokenIn], acc, globals.MaxRepayBigInt, false); err != nil {
+	if _, err := i.Client.ApproveTx(tokenIn, i.Tokens[tokenIn], acc, globals.MaxUint256, false); err != nil {
 		return err
 	}
 

@@ -10,18 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (d *Dex) getFee(tokenIn, tokenOut common.Address, fee *big.Int) (*big.Int, error) {
-	pool, err := d.fetchPool(tokenIn, tokenOut, fee)
-	if err != nil {
-		return nil, err
-	}
-	if pool.PoolAddress != (common.Address{}) {
-		return fee, nil
-	}
-
-	return nil, fmt.Errorf("no pool found for tokens %s and %s", tokenIn.Hex(), tokenOut.Hex())
-}
-
 func (d *Dex) fetchPool(tokenIn, tokenOut common.Address, fee *big.Int) (*models.FeePool, error) {
 	data, err := d.ABI.Pack("getPool", tokenIn, tokenOut, fee)
 	if err != nil {
