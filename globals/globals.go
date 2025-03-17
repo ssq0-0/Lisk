@@ -18,14 +18,14 @@ func init() {
 	}
 
 	Erc20ABI = &parsedABI
-	_, success := MaxRepayBigInt.SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
+	_, success := MaxUint256.SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
 	if !success {
 		logger.GlobalLogger.Fatalf("Failed to set MaxRepayBigInt: invalid number")
 	}
 }
 
 const (
-	SoftVersion  = "v2.8.0"
+	SoftVersion  = "v2.9.0"
 	LinkRepo     = "https://api.github.com/repos/ssq0-0/Lisk/releases/latest"
 	Format       = "02.01.2006"
 	TotalSuccess = 0
@@ -76,7 +76,7 @@ var (
 	ApproveDeadlineOffset = 3600               // 1 hour
 	MaxApprove            = big.NewInt(1e18)
 	Erc20ABI              *abi.ABI
-	MaxRepayBigInt        = new(big.Int)
+	MaxUint256            = new(big.Int)
 
 	WETH   = common.HexToAddress("0x4200000000000000000000000000000000000006")
 	LISK   = common.HexToAddress("0xac485391EB2d7D88253a7F1eF18C37f4242D1A24")
@@ -84,6 +84,9 @@ var (
 	USDT   = common.HexToAddress("0x05D032ac25d322df992303dCa074EE7392C117b9")
 	NATIVE = common.Address{}
 	NULL   = common.Address{} // need for minor functions
+
+	// tokens array. Need for create tokens graph in pool algoritm
+	Tokens = []common.Address{WETH, USDC, USDT, LISK}
 
 	TokensDecimals = map[common.Address]PoolInfo{
 		common.HexToAddress("0x87D3d9CA455DCc9a3Ba5605D2829d994922DD04F"): PoolInfo{Token0: 6, Token1: 6},
