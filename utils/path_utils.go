@@ -9,6 +9,7 @@ func GetPath(path string) string {
 		"error":        "account/error_accs.csv",
 		"balances":     "account/balances_accs.csv",
 		"task_results": "account/points.csv",
+		"eligble":      "account/eligble.csv",
 	}
 
 	return paths[path]

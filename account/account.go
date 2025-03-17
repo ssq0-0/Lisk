@@ -33,9 +33,21 @@ type Account struct {
 	Proxy               string
 }
 
-func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, error) {
+func AccsFactory(privateKeys, proxys []string, cfg *config.Config, selectedModule string) ([]*Account, error) {
 	if len(privateKeys) == 0 {
 		return nil, errors.New("privateKeys list is empty")
+	}
+
+	if selectedModule == "AirdropStatus" {
+		var accs []*Account
+		for _, addr := range privateKeys {
+			accs = append(accs, &Account{
+				Address:      common.HexToAddress(addr),
+				ActionsCount: 1,
+				Stats:        make(map[string]int),
+			})
+		}
+		return accs, nil
 	}
 
 	wrapRange, swapRange, err := prepareRanges(cfg)
@@ -74,7 +86,7 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config) ([]*Account, 
 			}
 
 			if cfg.ActionCounts == 0 {
-				return fmt.Errorf("0 actions count. Check config.")
+				return fmt.Errorf("0 actions count, check config")
 			}
 
 			var proxy string

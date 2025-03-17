@@ -31,6 +31,7 @@ const (
 	Balance        ActionType = "checkBalance"
 	Wrap           ActionType = "wrapETH"
 	Unwrap         ActionType = "unwrapETH"
+	Airdrop        ActionType = "AirdropChecker"
 )
 
 var (

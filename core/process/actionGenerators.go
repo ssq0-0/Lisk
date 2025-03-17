@@ -12,6 +12,7 @@ import (
 )
 
 var actionGenerators = map[string]func(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error){
+	"AirdropStatus":      generateAirdropChecker,
 	"Oku":                generateSwap,
 	"IonicWithdrawAll":   generateIonicWithdraw,
 	"IonicRepayAll":      generateIonicRepay,
@@ -128,7 +129,7 @@ func generateIonic71Supply(acc *account.Account, clients map[string]*ethClient.C
 }
 
 func generateIonicRepay(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
-	return packActionProcessStruct(globals.Repay, "Ionic", globals.MaxRepayBigInt, globals.LISK, globals.NULL), nil
+	return packActionProcessStruct(globals.Repay, "Ionic", globals.MaxUint256, globals.LISK, globals.NULL), nil
 }
 
 func generateWrapers(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
@@ -149,10 +150,10 @@ func generateIonicWithdraw(acc *account.Account, clients map[string]*ethClient.C
 	switch acc.LiquidityState.LastAction {
 	case globals.ExitMarket:
 		updateLiquidityState(acc, globals.Redeem)
-		return packActionProcessStruct(globals.Redeem, "Ionic", globals.MaxRepayBigInt, globals.USDT, globals.NULL), nil
+		return packActionProcessStruct(globals.Redeem, "Ionic", globals.MaxUint256, globals.USDT, globals.NULL), nil
 	default:
 		updateLiquidityState(acc, globals.ExitMarket)
-		return packActionProcessStruct(globals.ExitMarket, "Ionic", globals.MaxRepayBigInt, globals.USDT, globals.NULL), nil
+		return packActionProcessStruct(globals.ExitMarket, "Ionic", globals.MaxUint256, globals.USDT, globals.NULL), nil
 	}
 }
 
@@ -182,5 +183,15 @@ func bridgeToLisk(acc *account.Account, balance *big.Int, chain string, client *
 		TypeAction: globals.Bridge[chain],
 		Amount:     percentBalance,
 		Module:     "Relay",
+	}, nil
+}
+
+func generateAirdropChecker(acc *account.Account, clients map[string]*ethClient.Client) (ActionProcess, error) {
+	return ActionProcess{
+		TokenFrom:  globals.NULL,
+		TokenTo:    globals.NULL,
+		TypeAction: globals.Airdrop,
+		Amount:     big.NewInt(0),
+		Module:     "AirdropStatus",
 	}, nil
 }

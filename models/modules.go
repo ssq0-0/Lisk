@@ -113,3 +113,8 @@ type BlockscoutResp struct {
 		Fast    float64 `json:"fast"`
 	} `json:"gas_prices"`
 }
+
+type CheckResponse struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}

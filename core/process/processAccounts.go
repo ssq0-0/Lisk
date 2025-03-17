@@ -9,6 +9,7 @@ import (
 	"lisk/logger"
 	"lisk/modules"
 	"lisk/utils"
+	"log"
 	"math/big"
 	"sync"
 	"time"
@@ -92,7 +93,7 @@ func processSingleAccount(ctx context.Context, acc *account.Account, selectModul
 
 func performActions(acc *account.Account, selectModule string, mod map[string]modules.ModulesFasad, clients map[string]*ethClient.Client, memory *Memory) error {
 	if _, err := validateNativeBalance(acc.Address, clients["lisk"]); err != nil {
-		if isCriticalError(err) && (selectModule != "Checker" && selectModule != "Portal_daily_check" && selectModule != "Portal_main_tasks" && selectModule != "BalanceCheck") {
+		if isCriticalError(err) && (selectModule != "Checker" && selectModule != "Portal_daily_check" && selectModule != "Portal_main_tasks" && selectModule != "BalanceCheck" && selectModule != "AirdropStatus") {
 			logger.GlobalLogger.Warnf("[%v] Insufficient ETH  balance. Stop trying.", acc.Address.Hex())
 			if err := utils.ReplacePrivateKey(acc.RawPK, acc.Address.Hex()); err != nil {
 				logger.GlobalLogger.Errorf("[%v] Failed to replace private key: %v", acc.Address, err)
@@ -116,7 +117,7 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 	}
 
 	totalActions := determineActionCount(acc, selectModule)
-
+	log.Println("total", totalActions)
 	for successfulActions < totalActions {
 		sleepDuration := generateTimeWindow(acc.ActionsTime, totalActions)[0]
 
@@ -132,7 +133,6 @@ func performActions(acc *account.Account, selectModule string, mod map[string]mo
 			logger.GlobalLogger.Warnf("[%v] Cannot generate action: %v", acc.Address, err)
 			continue
 		}
-
 		retryCount := 0
 	actionLoop:
 		for {

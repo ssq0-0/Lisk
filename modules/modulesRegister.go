@@ -6,8 +6,10 @@ import (
 	"lisk/config"
 	"lisk/ethClient"
 	"lisk/globals"
+	"lisk/httpClient"
 	"lisk/modules/balanceChecker"
 	"lisk/modules/dex"
+	"lisk/modules/eligbleChecker"
 	"lisk/modules/ionic"
 	"lisk/modules/liskPortal"
 	"lisk/modules/relay"
@@ -53,6 +55,14 @@ func ModulesInit(cfg *config.Config, abis map[string]*abi.ABI, clients map[strin
 				"LISK": globals.LISK,
 			}
 			return balanceChecker.NewChecker(clients["lisk"], tokens)
+		},
+		"AirdropStatus": func(cfg *config.Config, clients map[string]*ethClient.Client) (ModulesFasad, error) {
+			hc, err := httpClient.NewHttpClient("")
+			if err != nil {
+				return nil, err
+			}
+
+			return eligbleChecker.NewChecker(hc)
 		},
 	}
 

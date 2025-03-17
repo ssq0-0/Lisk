@@ -71,7 +71,7 @@ func main() {
 		logger.GlobalLogger.Warn(err)
 	}
 
-	accs, err := account.AccsFactory(privateKeys, proxies, cfg)
+	accs, err := account.AccsFactory(privateKeys, proxies, cfg, selectModule)
 	if err != nil {
 		logger.GlobalLogger.Error(err)
 		return
