@@ -188,7 +188,7 @@ func (c *Client) ApproveTx(tokenAddr, spender common.Address, acc *account.Accou
 		if allowance.Cmp(amount) >= 0 {
 			return nil, nil
 		}
-		approveValue = globals.MaxRepayBigInt
+		approveValue = globals.MaxUint256
 	}
 
 	approveData, err := globals.Erc20ABI.Pack("approve", spender, approveValue)
