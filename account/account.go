@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -40,9 +41,22 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config, selectedModul
 
 	if selectedModule == "AirdropStatus" {
 		var accs []*Account
-		for _, addr := range privateKeys {
+		for _, keyOrAddress := range privateKeys {
+			var address common.Address
+
+			// Проверяем, является ли переданное значение приватным ключом
+			privKey, err := crypto.HexToECDSA(keyOrAddress)
+			if err == nil {
+				// Если это приватный ключ, извлекаем адрес из публичного ключа
+				publicKey := privKey.Public().(*ecdsa.PublicKey)
+				address = crypto.PubkeyToAddress(*publicKey)
+			} else {
+				// Если это не приватный ключ, трактуем его как обычный адрес
+				address = common.HexToAddress(keyOrAddress)
+			}
+
 			accs = append(accs, &Account{
-				Address:      common.HexToAddress(addr),
+				Address:      address,
 				ActionsCount: 1,
 				Stats:        make(map[string]int),
 			})
