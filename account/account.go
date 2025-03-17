@@ -41,7 +41,7 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config, selectedModul
 
 	if selectedModule == "AirdropStatus" {
 		var accs []*Account
-		for _, keyOrAddress := range privateKeys {
+		for i, keyOrAddress := range privateKeys {
 			var address common.Address
 
 			// Проверяем, является ли переданное значение приватным ключом
@@ -55,10 +55,16 @@ func AccsFactory(privateKeys, proxys []string, cfg *config.Config, selectedModul
 				address = common.HexToAddress(keyOrAddress)
 			}
 
+			proxy := ""
+			if len(proxys) > 0 {
+				proxy = proxys[i]
+			}
+
 			accs = append(accs, &Account{
 				Address:      address,
 				ActionsCount: 1,
 				Stats:        make(map[string]int),
+				Proxy:        proxy,
 			})
 		}
 		return accs, nil
